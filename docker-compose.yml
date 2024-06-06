@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: GinChat-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: your_password
+      POSTGRES_DB: GinChat
+    ports:
+      - "5432:5432"
+    networks:
+      - pgnetwork
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: GinChat-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: your_email@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: your_password
+    ports:
+      - "8080:80"
+    networks:
+      - pgnetwork
+
+networks:
+  pgnetwork:
+    driver: bridge
+
+volumes:
+  postgres_data:
