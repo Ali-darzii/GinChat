@@ -1,6 +1,8 @@
 package main
 
-import "GinChat/routes"
+import (
+	"GinChat/routes"
+)
 
 func main() {
 	router := routes.Urls()

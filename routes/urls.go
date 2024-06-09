@@ -31,7 +31,7 @@ func Urls() *gin.Engine {
 	apiV1 := router.Group("api/v1")
 	{
 		//Authentication API
-		auth := apiV1.Group("/auth")
+		auth := apiV1.Group("/auth", middleware.NotAuthorization())
 		{
 			auth.POST("", authAPI.Register)
 			auth.PUT("", authAPI.Login)

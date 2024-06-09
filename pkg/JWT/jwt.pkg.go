@@ -30,7 +30,7 @@ func (j Jwt) CreateToken(user entity.User) (serializer.Token, error) {
 	var err error
 
 	claims := jwt.MapClaims{}
-	claims["user_id"] = user.Username
+	claims["user_id"] = user.Phone.PhoneNo
 	claims["exp"] = time.Now().Add(time.Hour * 2).Unix()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -61,7 +61,7 @@ func (Jwt) ValidateToken(accessToken string) (entity.User, error) {
 
 	payload, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
-		user.Username = payload["user_id"].(string)
+		user.Phone.PhoneNo = payload["user_id"].(string)
 
 		return user, nil
 	}
@@ -115,7 +115,7 @@ func (Jwt) ValidateRefreshToken(model serializer.Token) (entity.User, error) {
 		return user, errors.New("invalid token")
 	}
 
-	user.Username = payload["user_id"].(string)
+	user.Phone.PhoneNo = payload["user_id"].(string)
 
 	return user, nil
 }
