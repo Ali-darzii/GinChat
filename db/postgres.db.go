@@ -28,7 +28,13 @@ func ConnectPostgres() *gorm.DB {
 		panic("Failed to connect Postgres database")
 	}
 
-	err = db.AutoMigrate(&entity.User{}, &entity.Phone{})
+	err = db.AutoMigrate(
+		&entity.User{},
+		&entity.Phone{},
+		&entity.UserLogins{},
+		&entity.UserDevice{},
+		&entity.UserIP{},
+	)
 	if err != nil {
 		panic("Failed: Unable to migrate your postgres database")
 	}

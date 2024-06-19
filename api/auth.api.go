@@ -1,6 +1,7 @@
 package api
 
 import (
+	"GinChat/pkg/JWT"
 	"GinChat/serializer"
 	"GinChat/service"
 	"GinChat/utils"
@@ -10,7 +11,6 @@ import (
 
 type AuthAPI interface {
 	Register(*gin.Context)
-	CreateToken() error
 	Login(*gin.Context)
 }
 
@@ -31,51 +31,67 @@ func (a authAPI) Register(request *gin.Context) {
 		request.JSON(http.StatusBadRequest, utils.BadFormat)
 		return
 	}
-	if err := registerRequest.PhoneNoValidate(registerRequest.PhoneNo); err != nil {
-		request.JSON(http.StatusBadRequest, utils.BadFormat)
-		return
-	}
-	if registerRequest.UserName != "" {
-		if err := registerRequest.UsernameValidate(registerRequest.UserName); err != nil {
-			request.JSON(http.StatusBadRequest, utils.BadFormat)
+	isSignup, err := a.service.Register(registerRequest)
+	if err != nil {
+		if err.Error() == "too_many_request" {
+			request.JSON(http.StatusTooManyRequests, utils.ExpiredTimeBlocked)
 			return
 		}
-	}
-	if err := a.service.Register(registerRequest); err != nil {
-		if err.Error() == "unique_field" {
-			request.JSON(http.StatusBadRequest, utils.UniqueField)
-			return
-		}
+
 		request.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
-	request.JSON(http.StatusCreated, gin.H{"data": "Token generated", "status": true})
+	if isSignup {
+		request.JSON(http.StatusCreated, gin.H{"data": "sent", "is_signup": isSignup})
+		return
+	}
+	request.JSON(http.StatusOK, gin.H{"data": "sent", "is_signup": isSignup})
 	return
 }
 
 func (a authAPI) Login(request *gin.Context) {
 	var loginRequest serializer.LoginRequest
+
 	if err := request.ShouldBind(&loginRequest); err != nil {
-		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		request.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
-	if err := loginRequest.PhoneNoValidate(loginRequest.PhoneNo); err != nil {
-		request.JSON(http.StatusBadRequest, utils.BadFormat)
-		return
-	}
+
 	user, err := a.service.Login(loginRequest)
 	if err != nil {
 		if err.Error() == "not_found" {
 			request.JSON(http.StatusBadRequest, utils.ObjectNotFound)
 			return
 		}
+		if err.Error() == "expired_time" || err.Error() == "invalid_token" {
+			request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
+			return
+		}
+		if err.Error() == "name_field_required" {
+			request.JSON(http.StatusBadRequest, gin.H{"error": "name field for the first login is required", "status": false})
+			return
+		}
 		request.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
-	request.JSON(http.StatusOK, user)
+	request.SetCookie(
+		"loginAttempt",
+		"", -1,
+		"/",
+		"localhost",
+		false,
+		true,
+	)
+	if err := utils.UserLoggedIn(request, user); err != nil {
+		request.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+	jwt := JWT.Jwt{}
+	token, err := jwt.CreateToken(user)
+	if err != nil {
+		request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
+		return
+	}
+	request.JSON(http.StatusOK, token)
 	return
-}
-
-func (a authAPI) CreateToken() error {
-	return nil
 }

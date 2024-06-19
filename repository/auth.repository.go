@@ -7,8 +7,8 @@ import (
 )
 
 type AuthRepository interface {
-	Register(entity.User) error
-	Login(entity.User) (entity.User, error)
+	UserSave(entity.User) error
+	PhoneSave(entity.Phone) error
 	FindByPhone(string) (entity.User, error)
 }
 
@@ -22,19 +22,22 @@ func NewAuthRepository(connection *gorm.DB) AuthRepository {
 	}
 }
 
-func (a authRepository) Register(user entity.User) error {
-	//todo: check that phone_no doesn't exist | generate SmS token
-	if _, err := a.FindByPhone(user.Phone.PhoneNo); err != nil {
+func (a authRepository) UserSave(user entity.User) error {
+	errs := a.conn.Save(&user)
 
-		if err.Error() == "not_found" {
-			if errs := a.conn.Save(&user); errs != nil {
-				return errs.Error
-			}
-			return nil
-		}
-		return err
+	if errs.Error != nil {
+		return errs.Error
 	}
-	return errors.New("unique_field")
+
+	return nil
+}
+
+func (a authRepository) PhoneSave(phone entity.Phone) error {
+	res := a.conn.Save(&phone)
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
 }
 
 func (a authRepository) FindByPhone(phoneNo string) (entity.User, error) {
@@ -47,9 +50,5 @@ func (a authRepository) FindByPhone(phoneNo string) (entity.User, error) {
 		return entity.User{}, res.Error
 	}
 	user.Phone = phone
-	return user, nil
-}
-
-func (a authRepository) Login(user entity.User) (entity.User, error) {
 	return user, nil
 }

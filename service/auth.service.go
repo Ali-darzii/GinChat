@@ -4,16 +4,15 @@ import (
 	"GinChat/entity"
 	"GinChat/repository"
 	"GinChat/serializer"
+	"GinChat/utils"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"math/rand/v2"
 	_ "math/rand/v2"
 	"time"
 )
 
 type AuthService interface {
-	Register(serializer.RegisterRequest) (gin.H, error)
+	Register(serializer.RegisterRequest) (bool, error)
 	Login(serializer.LoginRequest) (entity.User, error)
 }
 
@@ -27,24 +26,30 @@ func NewAuthService(repo repository.AuthRepository) AuthService {
 	}
 }
 
-func (a authService) Register(registerRequest serializer.RegisterRequest) (gin.H, error) {
+func (a authService) Register(registerRequest serializer.RegisterRequest) (bool, error) {
 	user, err := a.authRepository.FindByPhone(registerRequest.PhoneNo)
 
 	if err == nil {
-		timeNow := time.Now()
-		var expTime time.Time = timeNow.Add(time.Second * 60)
-		var token int = rand.IntN(8999) + 1000
+		const isSignup bool = false
+
+		if user.Phone.ExpTime != nil && user.Phone.ExpTime.After(time.Now()) {
+			return isSignup, errors.New("too_many_request")
+		}
+		var expTime = utils.GetExpiryTime()
+		var token = utils.SmsTokenGenerate()
 		user.Phone.Token = &token
 		user.Phone.ExpTime = &expTime
+		if err := a.authRepository.PhoneSave(user.Phone); err != nil {
+			return isSignup, err
+		}
 		fmt.Println(*user.Phone.Token)
-		return gin.H{"detail": "send", "is_signup": false}, nil
+		return isSignup, nil
 	}
-
-	timeNow := time.Now()
-	var expTime time.Time = timeNow.Add(time.Second * 60)
-	var token int = rand.IntN(8999) + 1000
+	const isSignup bool = true
+	var expTime = utils.GetExpiryTime()
+	var token = utils.SmsTokenGenerate()
 	var newUser = entity.User{
-		Name:     registerRequest.Name,
+		Name:     nil,
 		Username: nil,
 		Phone: entity.Phone{
 			PhoneNo: registerRequest.PhoneNo,
@@ -53,23 +58,38 @@ func (a authService) Register(registerRequest serializer.RegisterRequest) (gin.H
 		},
 	}
 	fmt.Println(*newUser.Phone.Token)
-	if err := a.authRepository.Register(newUser); err != nil {
-		return gin.H{}, err
+	if err := a.authRepository.UserSave(newUser); err != nil {
+		return isSignup, err
 	}
-	return gin.H{"detail": "send", "is_signup": true}, nil
+	return isSignup, nil
 }
 func (a authService) Login(loginRequest serializer.LoginRequest) (entity.User, error) {
 	user, err := a.authRepository.FindByPhone(loginRequest.PhoneNo)
 	if err != nil {
 		return entity.User{}, err
 	}
-	if user.Phone.ExpTime.Before(time.Now()) {
+
+	if user.Phone.ExpTime == nil || user.Phone.ExpTime.Before(time.Now()) {
 		return entity.User{}, errors.New("expired_time")
 	}
-	if loginRequest.Token != user.Phone.Token {
+	if loginRequest.Token != *user.Phone.Token {
 		return entity.User{}, errors.New("invalid_token")
 	}
+	if user.Name == nil || *user.Name == "" {
+		if loginRequest.Name == "" {
+			return entity.User{}, errors.New("name_field_required")
+		}
+		user.Name = &loginRequest.Name
+	}
+	user.Phone.ExpTime = nil
 	user.Phone.Token = nil
+
+	if err := a.authRepository.UserSave(user); err != nil {
+		return entity.User{}, err
+	}
+	if err := a.authRepository.PhoneSave(user.Phone); err != nil {
+		return entity.User{}, err
+	}
 
 	return user, nil
 }

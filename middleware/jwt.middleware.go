@@ -12,7 +12,6 @@ func AuthorizationJWT(jwtService JWT.JwtService) gin.HandlerFunc {
 	return func(request *gin.Context) {
 		var authToken string = request.GetHeader("Authorization")
 		if authToken == "" {
-			// JSON != AbortWithStatusJson -> it won't go in userAPI anymore
 			request.AbortWithStatusJSON(http.StatusUnauthorized, utils.AuthenticationRequired)
 			return
 		}
@@ -24,7 +23,7 @@ func AuthorizationJWT(jwtService JWT.JwtService) gin.HandlerFunc {
 			request.AbortWithStatusJSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
 			return
 		}
-		request.Set("userName", user.Username)
+		request.Set("phoneNo", user.Phone.PhoneNo)
 		return
 	}
 }
