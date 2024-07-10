@@ -14,11 +14,11 @@ func ConnectPostgres() *gorm.DB {
 	if end != nil {
 		panic("Failed to load .env file")
 	}
-	dbUser := os.Getenv("DBUser")
-	dbPASS := os.Getenv("DBPass")
-	dbHost := os.Getenv("DBHost")
-	dbPort := os.Getenv("DBPort")
-	dbName := os.Getenv("DBName")
+	dbUser := os.Getenv("PostgresUser")
+	dbPASS := os.Getenv("PostgresPass")
+	dbHost := os.Getenv("PostgresHost")
+	dbPort := os.Getenv("PostgresPort")
+	dbName := os.Getenv("PostgresName")
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Tehran",
 		dbHost, dbUser, dbPASS, dbName, dbPort,

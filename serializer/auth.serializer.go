@@ -6,7 +6,7 @@ type Token struct {
 }
 
 type RegisterRequest struct {
-	PhoneNo string `binding:"required,phone_validator" json:"phone_no"`
+	PhoneNo string `binding:"required,phone_validator,max=11,min=11" json:"phone_no"`
 }
 
 type LoginRequest struct {

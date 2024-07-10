@@ -26,11 +26,14 @@ func NewAuthService(repo repository.AuthRepository) AuthService {
 	}
 }
 
+// todo: we need celery for this
 func (a authService) Register(registerRequest serializer.RegisterRequest) (bool, error) {
 	user, err := a.authRepository.FindByPhone(registerRequest.PhoneNo)
-
+	var isSignup = true
 	if err == nil {
-		const isSignup bool = false
+		if user.Name != nil {
+			isSignup = false
+		}
 
 		if user.Phone.ExpTime != nil && user.Phone.ExpTime.After(time.Now()) {
 			return isSignup, errors.New("too_many_request")
@@ -45,7 +48,7 @@ func (a authService) Register(registerRequest serializer.RegisterRequest) (bool,
 		fmt.Println(*user.Phone.Token)
 		return isSignup, nil
 	}
-	const isSignup bool = true
+
 	var expTime = utils.GetExpiryTime()
 	var token = utils.SmsTokenGenerate()
 	var newUser = entity.User{

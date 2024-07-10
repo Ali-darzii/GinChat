@@ -13,17 +13,17 @@ type AuthRepository interface {
 }
 
 type authRepository struct {
-	conn *gorm.DB
+	postgresConn *gorm.DB
 }
 
-func NewAuthRepository(connection *gorm.DB) AuthRepository {
+func NewAuthRepository(postgresConnection *gorm.DB) AuthRepository {
 	return &authRepository{
-		conn: connection,
+		postgresConn: postgresConnection,
 	}
 }
 
 func (a authRepository) UserSave(user entity.User) error {
-	errs := a.conn.Save(&user)
+	errs := a.postgresConn.Save(&user)
 
 	if errs.Error != nil {
 		return errs.Error
@@ -33,7 +33,7 @@ func (a authRepository) UserSave(user entity.User) error {
 }
 
 func (a authRepository) PhoneSave(phone entity.Phone) error {
-	res := a.conn.Save(&phone)
+	res := a.postgresConn.Save(&phone)
 	if res.Error != nil {
 		return res.Error
 	}
@@ -42,11 +42,11 @@ func (a authRepository) PhoneSave(phone entity.Phone) error {
 
 func (a authRepository) FindByPhone(phoneNo string) (entity.User, error) {
 	var phone entity.Phone
-	if res := a.conn.Where("phone_no = ?", phoneNo).Take(&phone); res.Error != nil {
+	if res := a.postgresConn.Where("phone_no = ?", phoneNo).Take(&phone); res.Error != nil {
 		return entity.User{}, errors.New("not_found")
 	}
 	var user entity.User
-	if res := a.conn.Where("id = ?", phone.UserID).Take(&user); res.Error != nil {
+	if res := a.postgresConn.Where("id = ?", phone.UserID).Take(&user); res.Error != nil {
 		return entity.User{}, res.Error
 	}
 	user.Phone = phone

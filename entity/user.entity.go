@@ -6,9 +6,10 @@ import (
 )
 
 type User struct {
-	ID         uint       `gorm:"primary_key:auto_increment" json:"id"`
-	Name       *string    `gorm:"type:varchar(50);NULL" json:"name"`
-	Username   *string    `gorm:"type:varchar(50);min=5;unique;NULL" json:"username"`
+	ID       uint    `gorm:"primary_key:auto_increment" json:"id"`
+	Name     *string `gorm:"type:varchar(50);NULL" json:"name"`
+	Username *string `gorm:"type:varchar(50);min=5;unique;NULL" json:"username"`
+	//Socket     *websocket.Conn `json:"socket"`
 	Phone      Phone      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"phone"`
 	UserLogins UserLogins `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"user_logins"`
 	IsActive   bool       `gorm:"type:bool;default:true" json:"is_active"`
