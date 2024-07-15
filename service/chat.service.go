@@ -1,9 +1,11 @@
 package service
 
-import "GinChat/repository"
+import (
+	"GinChat/repository"
+)
 
 type ChatService interface {
-	Chat()
+	WsHandler(any) (uint, error)
 }
 
 type chatService struct {
@@ -16,6 +18,11 @@ func NewChatService(repository repository.ChatRepository) ChatService {
 	}
 }
 
-func (c chatService) Chat() {
+func (c chatService) WsHandler(phoneNo any) (uint, error) {
+	userId, err := c.chatRepository.WsHandler(phoneNo)
+	if err != nil {
+		return 0, err
+	}
+	return userId, nil
 
 }

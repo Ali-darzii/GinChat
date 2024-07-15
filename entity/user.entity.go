@@ -9,11 +9,12 @@ type User struct {
 	ID       uint    `gorm:"primary_key:auto_increment" json:"id"`
 	Name     *string `gorm:"type:varchar(50);NULL" json:"name"`
 	Username *string `gorm:"type:varchar(50);min=5;unique;NULL" json:"username"`
-	//Socket     *websocket.Conn `json:"socket"`
-	Phone      Phone      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"phone"`
-	UserLogins UserLogins `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"user_logins"`
-	IsActive   bool       `gorm:"type:bool;default:true" json:"is_active"`
-	IsAdmin    bool       `gorm:"type:bool;default:false" json:"is_admin"`
+
+	Phone          Phone          `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"phone"`
+	UserLogins     UserLogins     `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"user_logins"`
+	PrivateMessage PrivateMessage `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"private_message"`
+	IsActive       bool           `gorm:"type:bool;default:true" json:"is_active"`
+	IsAdmin        bool           `gorm:"type:bool;default:false" json:"is_admin"`
 }
 
 func (u *User) AfterCreate(db *gorm.DB) error {
@@ -45,10 +46,10 @@ type UserLogins struct {
 }
 
 type UserIP struct {
-	ID           uint      `gorm:"primary_key:auto_increment" json:"id"`
-	UserLoginsID uint      `gorm:"NOT NULL" json:"user_logins"`
-	IP           string    `gorm:"type:varchar(20);NOT NULL" json:"ip"`
-	Date         time.Time `gorm:"default:current_timestamp" json:"date"`
+	ID           uint   `gorm:"primary_key:auto_increment" json:"id"`
+	UserLoginsID uint   `gorm:"NOT NULL" json:"user_logins"`
+	IP           string `gorm:"type:varchar(20);NOT NULL" json:"ip"`
+	Date         time.Time
 }
 
 type UserDevice struct {

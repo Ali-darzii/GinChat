@@ -1,12 +1,17 @@
 package repository
 
 import (
+	"GinChat/entity"
+	"context"
+	"errors"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
+var ctx = context.Background()
+
 type ChatRepository interface {
-	Chat()
+	WsHandler(any) (uint, error)
 }
 type chatRepository struct {
 	postgresConn *gorm.DB
@@ -20,6 +25,11 @@ func NewChatRepository(postgres *gorm.DB, redisConnection *redis.Client) ChatRep
 	}
 }
 
-func (c chatRepository) Chat() {
+func (c chatRepository) WsHandler(phoneNo any) (uint, error) {
+	var phone entity.Phone
+	if res := c.postgresConn.Where("phone_no = ?", phoneNo).Take(&phone); res.Error != nil {
+		return 0, errors.New("not_found")
+	}
 
+	return phone.UserID, nil
 }

@@ -58,6 +58,7 @@ func Urls() *gin.Engine {
 		}
 
 	}
+
 	apiV1 := router.Group("api/v1")
 	{
 		//Authentication API
@@ -75,7 +76,7 @@ func Urls() *gin.Engine {
 		//chat API
 		chat := apiV1.Group("/chat", middleware.AuthorizationJWT(jwtAuth))
 		{
-			chat.GET("/ws/", chatAPI.WsHandler)
+			chat.GET("/ws/", chatAPI.ChatWs)
 
 		}
 

@@ -11,9 +11,9 @@ var (
 	MethodNotAllowed        = gin.H{"status": false, "error_code": 3, "detail": "Method_Not_Allowed"}
 	RouteNotDefined         = gin.H{"status": false, "error_code": 4, "detail": "Route_Not_Defined"}
 	BadFormat               = gin.H{"status": false, "error_code": 5, "detail": "Bad_Format"}
-	UniqueField             = gin.H{"status": false, "error_code": 6, "detail": "Unique_Field_Required"}
-	ObjectNotFound          = gin.H{"status": false, "error_code": 7, "detail": "Object_Not_Found"}
-	ExpiredTimeBlocked      = gin.H{"status": false, "error_code": 8, "detail": "Too_Many_Token_Request"}
-	SomethingWentWrong      = gin.H{"status": false, "error_code": 9, "detail": "We_Don't_Know_What_Happened"}
+	ObjectNotFound          = gin.H{"status": false, "error_code": 6, "detail": "Object_Not_Found"}
+	ExpiredTimeBlocked      = gin.H{"status": false, "error_code": 7, "detail": "Too_Many_Token_Request"}
+	SomethingWentWrong      = gin.H{"status": false, "error_code": 8, "detail": "We_Don't_Know_What_Happened"}
 	TooManyLoginRequest     = gin.H{"status": false, "error_code": 9, "detail": "Ip_Banned_For_15_min"}
+	CanNotReachWsConnection = gin.H{"status": false, "error_code": 10, "detail": "Can_Not_Reach_Ws_Connection"}
 )
