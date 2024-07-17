@@ -36,8 +36,8 @@ func ConnectPostgres() *gorm.DB {
 		&entity.UserDevice{},
 		&entity.UserIP{},
 		//chat
-		&entity.Private{},
-		&entity.PrivateMessage{},
+		&entity.PrivateRoom{},
+		&entity.PrivateMessageRoom{},
 	)
 	if err != nil {
 		panic("Failed: Unable to migrate your postgres database")

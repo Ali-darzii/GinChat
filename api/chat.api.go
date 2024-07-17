@@ -39,7 +39,6 @@ var (
 )
 
 func (c chatAPI) ChatWs(request *gin.Context) {
-	go websocketHandler.Manager.Start()
 	webSocket, err := upgrader.Upgrade(request.Writer, request.Request, nil)
 	phoneNo, exist := request.Get("phoneNo")
 	if !exist {
@@ -50,11 +49,6 @@ func (c chatAPI) ChatWs(request *gin.Context) {
 		return
 	}
 
-	if err = webSocket.WriteMessage(websocket.TextMessage, []byte("connected from server")); err != nil {
-		request.JSON(http.StatusInternalServerError, utils.CanNotReachWsConnection)
-		return
-	}
-	//userId, err := c.service.WsHandler(phoneNo)
 	var phone entity.Phone
 	if res := postDb.Where("phone_no = ?", phoneNo).Take(&phone); res.Error != nil {
 		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)

@@ -2,9 +2,9 @@ package websocketHandler
 
 import (
 	"GinChat/db"
+	"GinChat/entity"
 	"GinChat/serializer"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 )
@@ -16,7 +16,7 @@ type Client struct {
 }
 type ClientManager struct {
 	Clients    map[*Client]bool
-	Broadcast  chan []byte
+	Broadcast  chan serializer.Message
 	Register   chan *Client
 	Unregister chan *Client
 }
@@ -26,7 +26,7 @@ var (
 
 	// in memory system (every time we restart the server --> it will delete all saved Clients)
 	Manager = ClientManager{
-		Broadcast:  make(chan []byte),
+		Broadcast:  make(chan serializer.Message),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		Clients:    make(map[*Client]bool),
@@ -38,45 +38,62 @@ func (manager *ClientManager) Start() {
 	for {
 		select {
 		//If there is a new connection access, pass the connection to conn through the channel
-		case conn := <-manager.Register:
-			fmt.Println("function Start manager.Register case")
-			manager.Clients[conn] = true
-
+		case client := <-manager.Register:
+			manager.Clients[client] = true
+			jsonMessage, _ := json.Marshal(&serializer.ServerMessage{Content: "Connected from server !", Status: true})
+			client.Send <- jsonMessage
 			//If the connection is disconnected
-		case conn := <-manager.Unregister:
-			fmt.Println("function Start manager.Unregister case")
-
-			if _, ok := manager.Clients[conn]; ok {
-				close(conn.Send)
-				delete(manager.Clients, conn)
+		// disconnected clients
+		case client := <-manager.Unregister:
+			if _, ok := manager.Clients[client]; ok {
+				close(client.Send)
+				delete(manager.Clients, client)
 			}
 		//broadcast
 		case message := <-manager.Broadcast:
-			fmt.Println("function Start manager.Broadcast case")
-			//Traversing the client that has been connected, send the message to them
-			for client := range manager.Clients {
-				select {
-				case client.Send <- message:
-				default:
-					close(client.Send)
-					delete(manager.Clients, client)
+			var jsonMessage []byte
+
+			switch message.Type {
+			case "pv_message":
+				var privateMessage = entity.PrivateMessageRoom{
+					Sender:    message.Sender,
+					PrivateID: message.RoomID,
+					Body:      message.Content,
+				}
+				if res := postDb.Save(&privateMessage); res.Error != nil {
+					jsonMessage, _ = json.Marshal(&serializer.ServerMessage{Content: "can't save in db", Status: false})
+					message.Recipients = []uint{message.Sender}
+				} else {
+					jsonMessage, _ = json.Marshal(&privateMessage)
+
+				}
+
+			case "group_message":
+				continue
+			case "new_pv_message":
+				continue
+			case "new_group_message":
+				continue
+
+			}
+
+			for _, item := range message.Recipients {
+				for client := range manager.Clients {
+					if client.Id == item {
+						select {
+						case client.Send <- jsonMessage:
+						default:
+							close(client.Send)
+							delete(manager.Clients, client)
+						}
+					}
 				}
 			}
 		}
 	}
 }
-func (manager *ClientManager) Send(message []byte, ignore *Client) {
-	fmt.Println("function send")
 
-	for client := range manager.Clients {
-		//Send messages not to the shielded connection
-		if client != ignore {
-			client.Send <- message
-		}
-	}
-}
 func (c *Client) Read() {
-	fmt.Println("function Read")
 	defer func() {
 		Manager.Unregister <- c
 		_ = c.Socket.Close()
@@ -85,24 +102,78 @@ func (c *Client) Read() {
 	for {
 		//Read message
 		_, message, err := c.Socket.ReadMessage()
-		//If there is an error message, cancel this connection and then close it
+
 		if err != nil {
 			Manager.Unregister <- c
 			_ = c.Socket.Close()
 			break
 		}
+
+		var readMessage serializer.Message
+		if err = json.Unmarshal(message, &readMessage); err != nil {
+			Manager.Unregister <- c
+			_ = c.Socket.Close()
+			break
+		}
+
+		if ok := readMessage.Validate(); !ok {
+			Manager.Unregister <- c
+			_ = c.Socket.Close()
+			break
+		}
+
+		readMessage.Sender = c.Id
+		switch readMessage.Type {
+		case "pv_message":
+			if res := postDb.Table("pv_users").Select("user_id").Where("private_room_id = ?", readMessage.RoomID).Pluck("user_id", &readMessage.Recipients); res.Error != nil {
+				Manager.Unregister <- c
+				_ = c.Socket.Close()
+				break
+			}
+			var sameRoom bool
+			for index, item := range readMessage.Recipients {
+				if item == c.Id {
+					readMessage.Recipients = append(readMessage.Recipients[:index], readMessage.Recipients[index+1:]...)
+					sameRoom = true
+				}
+			}
+			// client must be in same room
+			if !sameRoom {
+				Manager.Unregister <- c
+				_ = c.Socket.Close()
+				break
+			}
+			//jsonMessage, _ := json.Marshal(&serializer.Message{
+			//	Type:       readMessage.Type,
+			//	Content:    readMessage.Content,
+			//	Recipients: readMessage.Recipients,
+			//	RoomID:     readMessage.RoomID,
+			//	Sender:     readMessage.Sender,
+			//})
+
+			Manager.Broadcast <- readMessage
+
+		case "group_message":
+			continue
+		case "new_pv_message":
+			continue
+		case "new_group_message":
+			continue
+		default:
+			close(c.Send)
+			delete(Manager.Clients, c)
+
+		}
 		//If there is no error message, put the information in Broadcast
-		jsonMessage, _ := json.Marshal(serializer.Message{Sender: c.Id, Content: string(message)})
-		Manager.Broadcast <- jsonMessage
+		//jsonMessage, _ := json.Marshal(&serializer.ServerMessage{Content: string(message)})
+		//Manager.Broadcast <- jsonMessage
 	}
 }
 func (c *Client) Write() {
-	fmt.Println("function Write")
 
 	defer func() {
 		_ = c.Socket.Close()
 	}()
-
 	for {
 		select {
 		//Read the message from send
@@ -114,6 +185,16 @@ func (c *Client) Write() {
 			}
 			//Write it if there is news and send it to the web side
 			_ = c.Socket.WriteMessage(websocket.TextMessage, message)
+
 		}
 	}
 }
+
+//func (manager *ClientManager) Send(message []byte, ignore *Client) {
+//	for client := range manager.Clients {
+//		//Send messages not to the shielded connection
+//		if client != ignore {
+//			client.Send <- message
+//		}
+//	}
+//}

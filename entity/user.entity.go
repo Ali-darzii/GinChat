@@ -10,11 +10,11 @@ type User struct {
 	Name     *string `gorm:"type:varchar(50);NULL" json:"name"`
 	Username *string `gorm:"type:varchar(50);min=5;unique;NULL" json:"username"`
 
-	Phone          Phone          `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"phone"`
-	UserLogins     UserLogins     `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"user_logins"`
-	PrivateMessage PrivateMessage `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"private_message"`
-	IsActive       bool           `gorm:"type:bool;default:true" json:"is_active"`
-	IsAdmin        bool           `gorm:"type:bool;default:false" json:"is_admin"`
+	Phone              Phone              `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"phone"`
+	UserLogins         UserLogins         `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"user_logins"`
+	PrivateMessageRoom PrivateMessageRoom `gorm:"foreignKey:Sender;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"private_message"`
+	IsActive           bool               `gorm:"type:bool;default:true" json:"is_active"`
+	IsAdmin            bool               `gorm:"type:bool;default:false" json:"is_admin"`
 }
 
 func (u *User) AfterCreate(db *gorm.DB) error {

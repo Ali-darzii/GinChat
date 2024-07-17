@@ -8,6 +8,7 @@ import (
 	"GinChat/repository"
 	"GinChat/service"
 	"GinChat/validators"
+	"GinChat/websocketHandler"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -58,6 +59,7 @@ func Urls() *gin.Engine {
 		}
 
 	}
+	go websocketHandler.Manager.Start()
 
 	apiV1 := router.Group("api/v1")
 	{
