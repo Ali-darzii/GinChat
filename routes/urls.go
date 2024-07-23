@@ -22,7 +22,7 @@ var (
 	redisDb *redis.Client = db.ConnectRedis()
 
 	//auth
-	authRepository repository.AuthRepository = repository.NewAuthRepository(postDb)
+	authRepository repository.AuthRepository = repository.NewAuthRepository(postDb, redisDb)
 	authService    service.AuthService       = service.NewAuthService(authRepository)
 	authAPI        api.AuthAPI               = api.NewAuthAPI(authService)
 
@@ -79,7 +79,9 @@ func Urls() *gin.Engine {
 		chat := apiV1.Group("/chat", middleware.AuthorizationJWT(jwtAuth))
 		{
 			chat.GET("/ws/", chatAPI.ChatWs)
-
+			chat.GET("get-users/", chatAPI.GetAllUsers)
+			chat.GET("get-rooms/", chatAPI.GetAllRooms)
+			chat.POST("make-chat/:id/", chatAPI.MakePvChat)
 		}
 
 	}

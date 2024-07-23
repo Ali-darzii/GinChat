@@ -5,6 +5,7 @@ import (
 	"GinChat/entity"
 	"GinChat/serializer"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 )
@@ -70,10 +71,6 @@ func (manager *ClientManager) Start() {
 
 			case "group_message":
 				continue
-			case "new_pv_message":
-				continue
-			case "new_group_message":
-				continue
 
 			}
 
@@ -104,61 +101,81 @@ func (c *Client) Read() {
 		_, message, err := c.Socket.ReadMessage()
 
 		if err != nil {
-			Manager.Unregister <- c
-			_ = c.Socket.Close()
+			c.Disconnect()
 			break
 		}
 
 		var readMessage serializer.Message
 		if err = json.Unmarshal(message, &readMessage); err != nil {
-			Manager.Unregister <- c
-			_ = c.Socket.Close()
+			c.Disconnect()
 			break
 		}
-
-		if ok := readMessage.Validate(); !ok {
-			Manager.Unregister <- c
-			_ = c.Socket.Close()
-			break
-		}
-
 		readMessage.Sender = c.Id
+
 		switch readMessage.Type {
 		case "pv_message":
+			if ok := readMessage.PrivateMessageValidate(); !ok {
+				c.Disconnect()
+				break
+			}
+
 			if res := postDb.Table("pv_users").Select("user_id").Where("private_room_id = ?", readMessage.RoomID).Pluck("user_id", &readMessage.Recipients); res.Error != nil {
-				Manager.Unregister <- c
-				_ = c.Socket.Close()
+				c.Disconnect()
 				break
 			}
 			var sameRoom bool
+			//checking
 			for index, item := range readMessage.Recipients {
 				if item == c.Id {
 					readMessage.Recipients = append(readMessage.Recipients[:index], readMessage.Recipients[index+1:]...)
 					sameRoom = true
 				}
 			}
-			// client must be in same room
+			// if clients are not in the same room
 			if !sameRoom {
-				Manager.Unregister <- c
-				_ = c.Socket.Close()
+				c.Disconnect()
 				break
 			}
-			//jsonMessage, _ := json.Marshal(&serializer.Message{
-			//	Type:       readMessage.Type,
-			//	Content:    readMessage.Content,
-			//	Recipients: readMessage.Recipients,
-			//	RoomID:     readMessage.RoomID,
-			//	Sender:     readMessage.Sender,
-			//})
 
 			Manager.Broadcast <- readMessage
 
+		case "new_pv_message":
+			if ok := readMessage.NewPrivateMessageValidate(); !ok {
+				c.Disconnect()
+				break
+			}
+			fmt.Println("sender is : ", readMessage.Sender)
+			fmt.Println("recipient is : ", readMessage.Recipients[0])
+			var privateRoom entity.PrivateRoom
+			if err := postDb.Joins("JOIN pv_users pu1 ON pu1.private_room_id = private_rooms.id").
+				Joins("JOIN pv_users pu2 ON pu2.private_room_id = private_rooms.id").
+				Where("pu1.user_id = ?", readMessage.Sender).
+				Where("pu2.user_id = ?", readMessage.Recipients[0]).
+				First(&privateRoom); err.Error != nil {
+
+			}
+			fmt.Println(privateRoom)
+
+			//var newRoom = entity.PrivateRoom{
+			//	Users: []entity.User{
+			//		{
+			//			ID: c.Id,
+			//		},
+			//		{
+			//			ID: readMessage.Recipients[0],
+			//		},
+			//	},
+			//}
+			//postDb.Where(&newRoom)
+			//
+			//if err := postDb.Save(&newRoom); err.Error != nil {
+			//	c.Disconnect()
+			//	break
+			//}
+
 		case "group_message":
 			continue
-		case "new_pv_message":
-			continue
-		case "new_group_message":
-			continue
+
 		default:
 			close(c.Send)
 			delete(Manager.Clients, c)
@@ -188,6 +205,12 @@ func (c *Client) Write() {
 
 		}
 	}
+}
+
+func (c *Client) Disconnect() {
+	Manager.Unregister <- c
+	_ = c.Socket.Close()
+
 }
 
 //func (manager *ClientManager) Send(message []byte, ignore *Client) {

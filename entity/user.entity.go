@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"gorm.io/gorm"
 	"time"
 )
 
@@ -17,14 +16,17 @@ type User struct {
 	IsAdmin            bool               `gorm:"type:bool;default:false" json:"is_admin"`
 }
 
-func (u *User) AfterCreate(db *gorm.DB) error {
-	u.UserLogins.UserID = u.ID
-	if res := db.Save(u); res != nil {
-		return res.Error
-	}
-	return nil
+//
+//func (u *User) AfterCreate(db *gorm.DB) error {
+//	var user User
+//	db.Where("id = ?", u.ID).Take(&user)
+//	u.UserLogins.UserID = u.ID
+//	if res := db.Save(u); res != nil {
+//		return res.Error
+//	}
+//	return nil
 
-}
+//}
 
 type Phone struct {
 	ID      uint   `gorm:"primary_key:auto_increment" json:"id"`

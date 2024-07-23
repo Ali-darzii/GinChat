@@ -7,11 +7,31 @@ import (
 	"github.com/mssola/user_agent"
 	"gorm.io/gorm"
 	"math/rand/v2"
+	"net"
+	"strings"
 	"time"
 )
 
-func GetClientIP(request *gin.Context) {
-
+func GetClientIP(request *gin.Context) string {
+	ip := request.GetHeader("X-Forwarded-For")
+	if ip != "" {
+		// first X-Forwarded-For
+		ips := strings.Split(ip, ",")
+		if len(ips) > 0 {
+			return strings.TrimSpace(ips[0])
+		}
+	}
+	// Check the X-Real-IP header
+	ip = request.GetHeader("X-Real-IP")
+	if ip != "" {
+		return ip
+	}
+	// Fallback to RemoteAddr
+	ip, _, err := net.SplitHostPort(request.Request.RemoteAddr)
+	if err != nil {
+		return request.Request.RemoteAddr
+	}
+	return ip
 }
 
 func GetExpiryTime() time.Time {
@@ -37,7 +57,7 @@ func UserLoggedIn(request *gin.Context, user entity.User) error {
 
 	var userIP entity.UserIP
 	userIP.UserLoginsID = userLogins.ID
-	userIP.IP = request.ClientIP()
+	userIP.IP = GetClientIP(request)
 	if res := postDb.Save(&userIP); res.Error != nil {
 		return res.Error
 	}

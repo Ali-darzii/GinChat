@@ -3,6 +3,7 @@ package api
 import (
 	"GinChat/db"
 	"GinChat/entity"
+	"GinChat/serializer"
 	"GinChat/service"
 	"GinChat/utils"
 	"GinChat/websocketHandler"
@@ -10,10 +11,14 @@ import (
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 	"net/http"
+	"strconv"
 )
 
 type ChatAPI interface {
 	ChatWs(*gin.Context)
+	GetAllUsers(*gin.Context)
+	GetAllRooms(ctx *gin.Context)
+	MakePvChat(*gin.Context)
 }
 
 type chatAPI struct {
@@ -38,6 +43,7 @@ var (
 	postDb *gorm.DB = db.ConnectPostgres()
 )
 
+// *only this function don't use api repo service structure
 func (c chatAPI) ChatWs(request *gin.Context) {
 	webSocket, err := upgrader.Upgrade(request.Writer, request.Request, nil)
 	phoneNo, exist := request.Get("phoneNo")
@@ -63,4 +69,56 @@ func (c chatAPI) ChatWs(request *gin.Context) {
 	websocketHandler.Manager.Register <- client
 	go client.Read()
 	go client.Write()
+
+}
+
+func (c chatAPI) GetAllUsers(request *gin.Context) {
+	var paginationRequest serializer.PaginationRequest
+	if err := request.ShouldBindQuery(&paginationRequest); err != nil {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
+	}
+	userPhoneNo, ok := request.Get("phoneNo")
+	if !ok {
+		request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
+		return
+	}
+	apiUserPagination, err := c.service.GetAllUsers(paginationRequest, userPhoneNo.(string))
+	if err != nil {
+		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
+		return
+	}
+
+	request.JSON(http.StatusOK, apiUserPagination)
+	return
+}
+func (c chatAPI) GetAllRooms(request *gin.Context) {
+	userPhoneNo, ok := request.Get("phoneNo")
+	if !ok {
+		request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
+		return
+	}
+	usersInSameRoom, err := c.service.GetAllRooms(userPhoneNo.(string))
+	if err != nil {
+		request.JSON(http.StatusNoContent, utils.ObjectNotFound)
+		return
+	}
+	request.JSON(http.StatusOK, usersInSameRoom)
+}
+func (c chatAPI) MakePvChat(request *gin.Context) {
+	userPhoneNo, ok := request.Get("phoneNo")
+	if !ok {
+		request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
+		return
+	}
+	recipientId, err := strconv.ParseUint(request.Param("id"), 10, 64)
+	if err != nil {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
+	}
+
+	err = c.service.MakePvChat(userPhoneNo.(string), uint(recipientId))
+	request.JSON(http.StatusCreated, err)
+	return
+
 }

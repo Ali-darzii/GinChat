@@ -3,6 +3,7 @@ package repository
 import (
 	"GinChat/entity"
 	"errors"
+	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
@@ -14,20 +15,22 @@ type AuthRepository interface {
 
 type authRepository struct {
 	postgresConn *gorm.DB
+	redisConn    *redis.Client
 }
 
-func NewAuthRepository(postgresConnection *gorm.DB) AuthRepository {
+func NewAuthRepository(postgresConnection *gorm.DB, redisConnection *redis.Client) AuthRepository {
 	return &authRepository{
 		postgresConn: postgresConnection,
+		redisConn:    redisConnection,
 	}
 }
 
 func (a authRepository) UserSave(user entity.User) error {
-	errs := a.postgresConn.Save(&user)
-
-	if errs.Error != nil {
+	user.UserLogins.UserID = user.ID
+	if errs := a.postgresConn.Save(&user); errs.Error != nil {
 		return errs.Error
 	}
+	a.redisConn.Del(ctx, "userCount")
 
 	return nil
 }

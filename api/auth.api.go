@@ -59,21 +59,25 @@ func (a authAPI) Login(request *gin.Context) {
 
 	user, err := a.service.Login(loginRequest)
 	if err != nil {
-		if err.Error() == "not_found" {
+		switch err.Error() {
+		case "not_found":
 			request.JSON(http.StatusBadRequest, utils.ObjectNotFound)
 			return
-		}
-		if err.Error() == "expired_time" || err.Error() == "invalid_token" {
+		case "expired_time":
 			request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
 			return
-		}
-		if err.Error() == "name_field_required" {
+		case "invalid_token":
+			request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
+			return
+		case "name_field_required":
 			request.JSON(http.StatusBadRequest, gin.H{"error": "name field for the first login is required", "status": false})
 			return
+		default:
+			request.JSON(http.StatusBadRequest, err.Error())
+			return
 		}
-		request.JSON(http.StatusBadRequest, err.Error())
-		return
 	}
+
 	request.SetCookie(
 		"loginAttempt",
 		"", -1,
