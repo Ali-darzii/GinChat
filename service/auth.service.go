@@ -61,7 +61,7 @@ func (a authService) Register(registerRequest serializer.RegisterRequest) (bool,
 		},
 	}
 	fmt.Println(*newUser.Phone.Token)
-	if err := a.authRepository.UserSave(newUser); err != nil {
+	if err := a.authRepository.NewUserSave(newUser); err != nil {
 		return isSignup, err
 	}
 	return isSignup, nil

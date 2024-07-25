@@ -13,6 +13,13 @@ type Message struct {
 	Recipients []uint `json:"recipients"`
 }
 
+type SendPvMessage struct {
+	Type    string `json:"type"`
+	RoomID  uint   `json:"room_id" binding:"required"`
+	Content string `json:"content,omitempty" binding:"required"`
+	Sender  uint   `json:"sender"`
+}
+
 func (c Message) PrivateMessageValidate() bool {
 	if c.RoomID == 0 {
 		return false
@@ -45,7 +52,7 @@ type APIUserPagination struct {
 	Next     string       `json:"next"`
 	Results  []UserInRoom `json:"results"`
 }
-type PvUsers struct {
-	RoomID uint `json:"private_room_id"`
-	UserID uint `json:"user_id"`
+type MakeNewChatRequest struct {
+	RecipientID uint   `binding:"required,min=1" json:"recipient_id"`
+	Content     string `binding:"required" json:"content"`
 }

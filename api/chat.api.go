@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 	"net/http"
-	"strconv"
 )
 
 type ChatAPI interface {
@@ -106,19 +105,23 @@ func (c chatAPI) GetAllRooms(request *gin.Context) {
 	request.JSON(http.StatusOK, usersInSameRoom)
 }
 func (c chatAPI) MakePvChat(request *gin.Context) {
+	var makeNewChatRequest serializer.MakeNewChatRequest
+	if err := request.ShouldBind(&makeNewChatRequest); err != nil {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+	}
+
 	userPhoneNo, ok := request.Get("phoneNo")
 	if !ok {
 		request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
 		return
 	}
-	recipientId, err := strconv.ParseUint(request.Param("id"), 10, 64)
+
+	message, err := c.service.MakePvChat(makeNewChatRequest, userPhoneNo.(string))
 	if err != nil {
-		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		request.JSON(http.StatusInternalServerError, err)
 		return
 	}
-
-	err = c.service.MakePvChat(userPhoneNo.(string), uint(recipientId))
-	request.JSON(http.StatusCreated, err)
+	request.JSON(http.StatusCreated, message)
 	return
 
 }

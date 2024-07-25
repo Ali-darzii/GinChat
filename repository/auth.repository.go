@@ -11,6 +11,7 @@ type AuthRepository interface {
 	UserSave(entity.User) error
 	PhoneSave(entity.Phone) error
 	FindByPhone(string) (entity.User, error)
+	NewUserSave(user entity.User) error
 }
 
 type authRepository struct {
@@ -24,8 +25,7 @@ func NewAuthRepository(postgresConnection *gorm.DB, redisConnection *redis.Clien
 		redisConn:    redisConnection,
 	}
 }
-
-func (a authRepository) UserSave(user entity.User) error {
+func (a authRepository) NewUserSave(user entity.User) error {
 	user.UserLogins.UserID = user.ID
 	if errs := a.postgresConn.Save(&user); errs.Error != nil {
 		return errs.Error
@@ -34,7 +34,15 @@ func (a authRepository) UserSave(user entity.User) error {
 
 	return nil
 }
+func (a authRepository) UserSave(user entity.User) error {
 
+	if errs := a.postgresConn.Save(&user); errs.Error != nil {
+		return errs.Error
+	}
+	a.redisConn.Del(ctx, "userCount")
+
+	return nil
+}
 func (a authRepository) PhoneSave(phone entity.Phone) error {
 	res := a.postgresConn.Save(&phone)
 	if res.Error != nil {
@@ -42,7 +50,6 @@ func (a authRepository) PhoneSave(phone entity.Phone) error {
 	}
 	return nil
 }
-
 func (a authRepository) FindByPhone(phoneNo string) (entity.User, error) {
 	var phone entity.Phone
 	if res := a.postgresConn.Where("phone_no = ?", phoneNo).Take(&phone); res.Error != nil {

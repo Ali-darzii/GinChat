@@ -10,7 +10,7 @@ import (
 type ChatService interface {
 	GetAllUsers(serializer.PaginationRequest, string) (serializer.APIUserPagination, error)
 	GetAllRooms(string) ([]serializer.UserInRoom, error)
-	MakePvChat(string, uint) error
+	MakePvChat(serializer.MakeNewChatRequest, string) (serializer.Message, error)
 }
 
 type chatService struct {
@@ -69,15 +69,14 @@ func (c chatService) GetAllRooms(phoneNo string) ([]serializer.UserInRoom, error
 	}
 	return usersInSameRoom, nil
 }
-func (c chatService) MakePvChat(phoneNo string, recipientId uint) error {
+func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest, phoneNo string) (serializer.Message, error) {
 	userId, err := c.chatRepository.FindByPhone(phoneNo)
 	if err != nil {
-		return err
+		return serializer.Message{}, err
 	}
-	roomId, err := c.chatRepository.MakePvChat(userId, recipientId)
+	message, err := c.chatRepository.MakePvChat(makeNewChatRequest, userId)
 	if err != nil {
-
+		return serializer.Message{}, err
 	}
-	fmt.Println(roomId)
-	return nil
+	return message, nil
 }

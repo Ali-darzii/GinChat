@@ -5,7 +5,6 @@ import (
 	"GinChat/entity"
 	"GinChat/serializer"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 )
@@ -53,9 +52,7 @@ func (manager *ClientManager) Start() {
 		//broadcast
 		case message := <-manager.Broadcast:
 			var jsonMessage []byte
-
-			switch message.Type {
-			case "pv_message":
+			if message.Type == "pv_message" {
 				var privateMessage = entity.PrivateMessageRoom{
 					Sender:    message.Sender,
 					PrivateID: message.RoomID,
@@ -65,15 +62,19 @@ func (manager *ClientManager) Start() {
 					jsonMessage, _ = json.Marshal(&serializer.ServerMessage{Content: "can't save in db", Status: false})
 					message.Recipients = []uint{message.Sender}
 				} else {
-					jsonMessage, _ = json.Marshal(&privateMessage)
+					pvMessage := serializer.SendPvMessage{
+						Type:    message.Type,
+						RoomID:  message.RoomID,
+						Content: message.Content,
+						Sender:  message.Sender,
+					}
+					jsonMessage, _ = json.Marshal(&pvMessage)
 
 				}
 
-			case "group_message":
-				continue
+			} else {
 
 			}
-
 			for _, item := range message.Recipients {
 				for client := range manager.Clients {
 					if client.Id == item {
@@ -86,8 +87,11 @@ func (manager *ClientManager) Start() {
 					}
 				}
 			}
+
 		}
+
 	}
+
 }
 
 func (c *Client) Read() {
@@ -138,40 +142,6 @@ func (c *Client) Read() {
 			}
 
 			Manager.Broadcast <- readMessage
-
-		case "new_pv_message":
-			if ok := readMessage.NewPrivateMessageValidate(); !ok {
-				c.Disconnect()
-				break
-			}
-			fmt.Println("sender is : ", readMessage.Sender)
-			fmt.Println("recipient is : ", readMessage.Recipients[0])
-			var privateRoom entity.PrivateRoom
-			if err := postDb.Joins("JOIN pv_users pu1 ON pu1.private_room_id = private_rooms.id").
-				Joins("JOIN pv_users pu2 ON pu2.private_room_id = private_rooms.id").
-				Where("pu1.user_id = ?", readMessage.Sender).
-				Where("pu2.user_id = ?", readMessage.Recipients[0]).
-				First(&privateRoom); err.Error != nil {
-
-			}
-			fmt.Println(privateRoom)
-
-			//var newRoom = entity.PrivateRoom{
-			//	Users: []entity.User{
-			//		{
-			//			ID: c.Id,
-			//		},
-			//		{
-			//			ID: readMessage.Recipients[0],
-			//		},
-			//	},
-			//}
-			//postDb.Where(&newRoom)
-			//
-			//if err := postDb.Save(&newRoom); err.Error != nil {
-			//	c.Disconnect()
-			//	break
-			//}
 
 		case "group_message":
 			continue

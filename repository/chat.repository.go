@@ -3,6 +3,7 @@ package repository
 import (
 	"GinChat/entity"
 	"GinChat/serializer"
+	"GinChat/websocketHandler"
 	"context"
 	"errors"
 	"github.com/go-redis/redis/v8"
@@ -17,7 +18,7 @@ type ChatRepository interface {
 	FindByPhone(string) (uint, error)
 	GetAllUsers(serializer.PaginationRequest, uint) ([]serializer.UserInRoom, int64, error)
 	GetAllRooms(uint) ([]serializer.UserInRoom, error)
-	MakePvChat(uint, uint) (entity.PrivateRoom, error)
+	MakePvChat(serializer.MakeNewChatRequest, uint) (serializer.Message, error)
 }
 type chatRepository struct {
 	postgresConn *gorm.DB
@@ -99,15 +100,25 @@ func (c chatRepository) GetAllRooms(userId uint) ([]serializer.UserInRoom, error
 
 	return usersInRoom, nil
 }
-func (c chatRepository) MakePvChat(userId uint, recipientId uint) (entity.PrivateRoom, error) {
+func (c chatRepository) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest, userId uint) (serializer.Message, error) {
+	var message serializer.Message
 	privateRoom := entity.PrivateRoom{
 		Users: []entity.User{
 			{ID: userId},
-			{ID: recipientId},
+			{ID: makeNewChatRequest.RecipientID},
 		},
 	}
 	if res := c.postgresConn.Create(&privateRoom); res.Error != nil {
-		return privateRoom, res.Error
+		return message, res.Error
 	}
-	return privateRoom, nil
+	message = serializer.Message{
+		Type:       "pv_message",
+		RoomID:     privateRoom.ID,
+		Sender:     userId,
+		Content:    makeNewChatRequest.Content,
+		Recipients: []uint{makeNewChatRequest.RecipientID},
+	}
+	websocketHandler.Manager.Broadcast <- message
+
+	return message, nil
 }
