@@ -15,3 +15,17 @@ type PrivateMessageRoom struct {
 	Sender    uint   `gorm:"NOT NULL" json:"sender"`
 	Body      string `gorm:"type:text;NOT NULL" json:"body"`
 }
+
+type GroupRoom struct {
+	ID               uint             `gorm:"primary_key:auto_increment" json:"id"`
+	Users            []User           `gorm:"many2many:group_users;" json:"group_users"`
+	Timestamp        time.Time        `gorm:"default:current_timestamp" json:"timestamp"`
+	GroupMessageRoom GroupMessageRoom `gorm:"foreignKey:GroupID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"group_message"`
+}
+
+type GroupMessageRoom struct {
+	ID      uint   `gorm:"primary_key:auto_increment" json:"id"`
+	GroupID uint   `gorm:"NOT NULL" json:"group_id"`
+	Sender  uint   `gorm:"NOT NULL" json:"sender"`
+	Body    string `gorm:"type:text;NOT NULL" json:"body"`
+}

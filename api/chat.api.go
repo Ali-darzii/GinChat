@@ -18,6 +18,7 @@ type ChatAPI interface {
 	GetAllUsers(*gin.Context)
 	GetAllRooms(ctx *gin.Context)
 	MakePvChat(*gin.Context)
+	MakeGroupChat(request *gin.Context)
 }
 
 type chatAPI struct {
@@ -42,7 +43,7 @@ var (
 	postDb *gorm.DB = db.ConnectPostgres()
 )
 
-// *only this function don't use api repo service structure
+// *only this ChatWs don't use api repo service structure
 func (c chatAPI) ChatWs(request *gin.Context) {
 	webSocket, err := upgrader.Upgrade(request.Writer, request.Request, nil)
 	phoneNo, exist := request.Get("phoneNo")
@@ -70,7 +71,6 @@ func (c chatAPI) ChatWs(request *gin.Context) {
 	go client.Write()
 
 }
-
 func (c chatAPI) GetAllUsers(request *gin.Context) {
 	var paginationRequest serializer.PaginationRequest
 	if err := request.ShouldBindQuery(&paginationRequest); err != nil {
@@ -122,6 +122,26 @@ func (c chatAPI) MakePvChat(request *gin.Context) {
 		return
 	}
 	request.JSON(http.StatusCreated, message)
+	return
+
+}
+func (c chatAPI) MakeGroupChat(request *gin.Context) {
+	phoneNo, ok := request.Get("phoneNo")
+	if !ok {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
+	}
+	var makeChatRequest serializer.MakeGroupChatRequest
+	if err := request.ShouldBind(&makeChatRequest); err != nil {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
+	}
+	err := c.service.MakeGroupChat(makeChatRequest, phoneNo.(string))
+	if err != nil {
+		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
+		return
+	}
+	request.JSON(http.StatusCreated, err)
 	return
 
 }

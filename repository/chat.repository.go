@@ -19,6 +19,7 @@ type ChatRepository interface {
 	GetAllUsers(serializer.PaginationRequest, uint) ([]serializer.UserInRoom, int64, error)
 	GetAllRooms(uint) ([]serializer.UserInRoom, error)
 	MakePvChat(serializer.MakeNewChatRequest, uint) (serializer.Message, error)
+	MakeGroupChat(entity.GroupRoom) (entity.GroupRoom, error)
 }
 type chatRepository struct {
 	postgresConn *gorm.DB
@@ -54,12 +55,6 @@ func (c chatRepository) GetAllUsers(paginationRequest serializer.PaginationReque
 		Where("users.id != ?", userId).
 		Group("users.id, private_rooms.id").
 		Scan(&allUsers)
-	//for more security
-	for index, item := range allUsers {
-		if item.RoomID != 0 {
-			allUsers[index].UserID = 0
-		}
-	}
 
 	//(User Count), using redis for less query
 	redisUserCount, _ := c.redisConn.Get(ctx, "userCount").Result()
@@ -75,18 +70,6 @@ func (c chatRepository) GetAllUsers(paginationRequest serializer.PaginationReque
 }
 func (c chatRepository) GetAllRooms(userId uint) ([]serializer.UserInRoom, error) {
 	var usersInRoom []serializer.UserInRoom
-	//if res := c.postgresConn.Table("users").
-	//	Select("users.name, users.username, private_rooms.id as room_id").
-	//	Joins("JOIN pv_users ON users.id = pv_users.user_id").
-	//	Joins("JOIN private_rooms ON private_rooms.id = pv_users.private_room_id").
-	//	Where("private_rooms.id IN (?)", c.postgresConn.Table("pv_users").
-	//		Select("private_room_id").
-	//		Where("user_id = ?", userId)).
-	//	Where("users.id != ?", userId).
-	//	Scan(&usersInRoom); res.Error != nil {
-	//	return []serializer.UserInRoom{}, res.Error
-	//}
-	//userId = 11
 	c.postgresConn.Table("users").
 		Select("users.name, users.username, COALESCE(private_rooms.id, 0) as room_id").
 		Joins("LEFT JOIN pv_users ON users.id = pv_users.user_id").
@@ -112,7 +95,7 @@ func (c chatRepository) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequ
 		return message, res.Error
 	}
 	message = serializer.Message{
-		Type:       "pv_message",
+		Type:       "new_pv_message",
 		RoomID:     privateRoom.ID,
 		Sender:     userId,
 		Content:    makeNewChatRequest.Content,
@@ -121,4 +104,12 @@ func (c chatRepository) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequ
 	websocketHandler.Manager.Broadcast <- message
 
 	return message, nil
+}
+func (c chatRepository) MakeGroupChat(groupRoom entity.GroupRoom) (entity.GroupRoom, error) {
+	if res := c.postgresConn.Save(&groupRoom); res.Error != nil {
+		return groupRoom, res.Error
+	}
+
+	return groupRoom, nil
+
 }

@@ -5,6 +5,7 @@ import (
 	"GinChat/entity"
 	"GinChat/serializer"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 )
@@ -52,14 +53,16 @@ func (manager *ClientManager) Start() {
 		//broadcast
 		case message := <-manager.Broadcast:
 			var jsonMessage []byte
-			if message.Type == "pv_message" {
-				var privateMessage = entity.PrivateMessageRoom{
+
+			switch message.Type {
+			case "pv_message", "new_pv_message":
+				privateMessage := entity.PrivateMessageRoom{
 					Sender:    message.Sender,
 					PrivateID: message.RoomID,
 					Body:      message.Content,
 				}
 				if res := postDb.Save(&privateMessage); res.Error != nil {
-					jsonMessage, _ = json.Marshal(&serializer.ServerMessage{Content: "can't save in db", Status: false})
+					jsonMessage, _ = json.Marshal(&serializer.ServerMessage{Content: "can't save message in db", RoomID: message.RoomID, Status: false})
 					message.Recipients = []uint{message.Sender}
 				} else {
 					pvMessage := serializer.SendPvMessage{
@@ -69,12 +72,36 @@ func (manager *ClientManager) Start() {
 						Sender:  message.Sender,
 					}
 					jsonMessage, _ = json.Marshal(&pvMessage)
-
 				}
 
-			} else {
+			case "group_message":
+				groupMessage := entity.GroupMessageRoom{
+					Sender:  message.Sender,
+					GroupID: message.RoomID,
+					Body:    message.Content,
+				}
+				if res := postDb.Save(&groupMessage); res.Error != nil {
+					jsonMessage, _ = json.Marshal(&serializer.ServerMessage{Content: "can't save message in db", RoomID: message.RoomID, Status: false})
+					message.Recipients = []uint{message.Sender}
+				} else {
+					gpMessage := serializer.SendPvMessage{
+						Type:    message.Type,
+						RoomID:  message.RoomID,
+						Content: message.Content,
+						Sender:  message.Sender,
+					}
+					jsonMessage, _ = json.Marshal(&gpMessage)
+				}
 
+			case "new_group_message":
+				gpMessage := serializer.NewGroupChat{
+					Type:    message.Type,
+					RoomID:  message.RoomID,
+					Members: message.Recipients,
+				}
+				jsonMessage, _ = json.Marshal(&gpMessage)
 			}
+
 			for _, item := range message.Recipients {
 				for client := range manager.Clients {
 					if client.Id == item {
@@ -129,9 +156,9 @@ func (c *Client) Read() {
 			}
 			var sameRoom bool
 			//checking
-			for index, item := range readMessage.Recipients {
+			for _, item := range readMessage.Recipients {
 				if item == c.Id {
-					readMessage.Recipients = append(readMessage.Recipients[:index], readMessage.Recipients[index+1:]...)
+					//readMessage.Recipients = append(readMessage.Recipients[:index], readMessage.Recipients[index+1:]...)
 					sameRoom = true
 				}
 			}
@@ -144,7 +171,26 @@ func (c *Client) Read() {
 			Manager.Broadcast <- readMessage
 
 		case "group_message":
-			continue
+			if res := postDb.Table("group_users").Select("user_id").Where("group_room_id = ?", readMessage.RoomID).Pluck("user_id", &readMessage.Recipients); res.Error != nil {
+				c.Disconnect()
+				break
+			}
+			fmt.Println(readMessage.Recipients)
+			var sameRoom bool
+			//checking
+			for _, item := range readMessage.Recipients {
+				if item == c.Id {
+					//readMessage.Recipients = append(readMessage.Recipients[:index], readMessage.Recipients[index+1:]...)
+					sameRoom = true
+				}
+			}
+			// if clients are not in the same room
+			if !sameRoom {
+				c.Disconnect()
+				break
+			}
+
+			Manager.Broadcast <- readMessage
 
 		default:
 			close(c.Send)
@@ -182,12 +228,3 @@ func (c *Client) Disconnect() {
 	_ = c.Socket.Close()
 
 }
-
-//func (manager *ClientManager) Send(message []byte, ignore *Client) {
-//	for client := range manager.Clients {
-//		//Send messages not to the shielded connection
-//		if client != ignore {
-//			client.Send <- message
-//		}
-//	}
-//}

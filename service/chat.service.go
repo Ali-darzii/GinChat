@@ -1,8 +1,10 @@
 package service
 
 import (
+	"GinChat/entity"
 	"GinChat/repository"
 	"GinChat/serializer"
+	"GinChat/websocketHandler"
 	"fmt"
 	"strconv"
 )
@@ -11,6 +13,7 @@ type ChatService interface {
 	GetAllUsers(serializer.PaginationRequest, string) (serializer.APIUserPagination, error)
 	GetAllRooms(string) ([]serializer.UserInRoom, error)
 	MakePvChat(serializer.MakeNewChatRequest, string) (serializer.Message, error)
+	MakeGroupChat(serializer.MakeGroupChatRequest, string) error
 }
 
 type chatService struct {
@@ -79,4 +82,33 @@ func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest
 		return serializer.Message{}, err
 	}
 	return message, nil
+}
+func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChatRequest, phoneNo string) error {
+	userId, err := c.chatRepository.FindByPhone(phoneNo)
+	if err != nil {
+		return err
+	}
+
+	var groupRoom entity.GroupRoom
+	groupRoom.Users = append(groupRoom.Users, entity.User{ID: userId})
+	for _, id := range makeGroupChatRequest.Recipients {
+		groupRoom.Users = append(groupRoom.Users, entity.User{ID: id})
+	}
+
+	groupRoom, err = c.chatRepository.MakeGroupChat(groupRoom)
+	if err != nil {
+		return err
+	}
+
+	message := serializer.Message{
+		Type:       "new_group_message",
+		RoomID:     groupRoom.ID,
+		Sender:     userId,
+		Recipients: append(makeGroupChatRequest.Recipients, userId),
+	}
+	fmt.Println(message.Recipients)
+
+	websocketHandler.Manager.Broadcast <- message
+	return nil
+
 }

@@ -2,6 +2,7 @@ package serializer
 
 type ServerMessage struct {
 	Content string `json:"content,omitempty"`
+	RoomID  uint   `json:"room_id"`
 	Status  bool   `json:"status"`
 }
 
@@ -20,6 +21,12 @@ type SendPvMessage struct {
 	Sender  uint   `json:"sender"`
 }
 
+type NewGroupChat struct {
+	Type    string `json:"type"`
+	RoomID  uint   `json:"room_id"`
+	Members []uint `json:"members"`
+}
+
 func (c Message) PrivateMessageValidate() bool {
 	if c.RoomID == 0 {
 		return false
@@ -32,6 +39,10 @@ func (c Message) NewPrivateMessageValidate() bool {
 	}
 
 	return true
+}
+
+type MakeGroupChatRequest struct {
+	Recipients []uint `binding:"required" json:"recipients_id"`
 }
 
 type PaginationRequest struct {

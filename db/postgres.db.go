@@ -38,6 +38,8 @@ func ConnectPostgres() *gorm.DB {
 		//chat
 		&entity.PrivateRoom{},
 		&entity.PrivateMessageRoom{},
+		&entity.GroupRoom{},
+		&entity.GroupMessageRoom{},
 	)
 	if err != nil {
 		panic("Failed: Unable to migrate your postgres database")

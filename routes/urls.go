@@ -81,7 +81,8 @@ func Urls() *gin.Engine {
 			chat.GET("/ws/", chatAPI.ChatWs)
 			chat.GET("get-users/", chatAPI.GetAllUsers)
 			chat.GET("get-rooms/", chatAPI.GetAllRooms)
-			chat.POST("make-chat/", chatAPI.MakePvChat)
+			chat.POST("make-pv/", chatAPI.MakePvChat)
+			chat.POST("make-group/", chatAPI.MakeGroupChat)
 		}
 
 	}
