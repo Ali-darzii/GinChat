@@ -120,7 +120,6 @@ func (manager *ClientManager) Start() {
 	}
 
 }
-
 func (c *Client) Read() {
 	defer func() {
 		Manager.Unregister <- c
@@ -197,9 +196,6 @@ func (c *Client) Read() {
 			delete(Manager.Clients, c)
 
 		}
-		//If there is no error message, put the information in Broadcast
-		//jsonMessage, _ := json.Marshal(&serializer.ServerMessage{Content: string(message)})
-		//Manager.Broadcast <- jsonMessage
 	}
 }
 func (c *Client) Write() {

@@ -11,7 +11,7 @@ import (
 
 type ChatService interface {
 	GetAllUsers(serializer.PaginationRequest, string) (serializer.APIUserPagination, error)
-	GetAllRooms(string) ([]serializer.UserInRoom, error)
+	GetAllRooms(string) ([]serializer.Room, error)
 	MakePvChat(serializer.MakeNewChatRequest, string) (serializer.Message, error)
 	MakeGroupChat(serializer.MakeGroupChatRequest, string) error
 }
@@ -64,11 +64,11 @@ func (c chatService) GetAllUsers(paginationRequest serializer.PaginationRequest,
 
 	return apiUserPagination, nil
 }
-func (c chatService) GetAllRooms(phoneNo string) ([]serializer.UserInRoom, error) {
+func (c chatService) GetAllRooms(phoneNo string) ([]serializer.Room, error) {
 	userId, _ := c.chatRepository.FindByPhone(phoneNo)
 	usersInSameRoom, err := c.chatRepository.GetAllRooms(userId)
 	if err != nil {
-		return []serializer.UserInRoom{}, err
+		return []serializer.Room{}, err
 	}
 	return usersInSameRoom, nil
 }
@@ -89,8 +89,11 @@ func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChat
 		return err
 	}
 
-	var groupRoom entity.GroupRoom
-	groupRoom.Users = append(groupRoom.Users, entity.User{ID: userId})
+	groupRoom := entity.GroupRoom{
+		Name:   makeGroupChatRequest.Name,
+		Users:  []entity.User{{ID: userId}},
+		Admins: []entity.User{{ID: userId}},
+	}
 	for _, id := range makeGroupChatRequest.Recipients {
 		groupRoom.Users = append(groupRoom.Users, entity.User{ID: id})
 	}

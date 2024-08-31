@@ -141,7 +141,6 @@ func (c chatAPI) MakeGroupChat(request *gin.Context) {
 		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
 		return
 	}
-	request.JSON(http.StatusCreated, err)
+	request.JSON(http.StatusCreated, nil)
 	return
-
 }
