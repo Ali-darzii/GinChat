@@ -78,6 +78,7 @@ func (a authAPI) Login(request *gin.Context) {
 		}
 	}
 
+	// todo: test issue 
 	request.SetCookie(
 		"loginAttempt",
 		"", -1,

@@ -35,7 +35,6 @@ var (
 )
 
 func (manager *ClientManager) Start() {
-
 	for {
 		select {
 		//If there is a new connection access, pass the connection to conn through the channel
