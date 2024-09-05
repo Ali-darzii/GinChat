@@ -1,0 +1,13 @@
+main {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    margin-top: 100px;
+    height: 100vh;
+
+}
+
+.gin-container {
+    background-color: #8d8bc8;
+    width: 50%;
+}
