@@ -17,7 +17,7 @@ services:
     image: dpage/pgadmin4:latest
     container_name: GinChat-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: your_email@gmail.com
+      PGADMIN_DEFAULT_EMAIL: youremail@gmail.com
       PGADMIN_DEFAULT_PASSWORD: your_password
     ports:
       - "8080:80"

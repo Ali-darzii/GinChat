@@ -20,6 +20,14 @@ a {
     text-decoration: none;
     color: inherit;
 }
+ul {
+    list-style: none;
+}
+body {
+    background: rgb(72, 106, 129);
+    background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+}
+
 
 a:checked {
     color: white;
@@ -29,10 +37,6 @@ a:active {
     color: black;
 }
 
-body {
-    background: rgb(72, 106, 129);
-    background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
-}
 
 .menu-container {
     z-index: 2000;
@@ -83,6 +87,7 @@ body {
     color: white;
     display: flex;
     justify-content: flex-end;
+    align-items: center;
     margin-right: 20px;
     margin-top: 20px;
     font-size: 1.5rem;
@@ -90,7 +95,16 @@ body {
 
 .github {
     margin-right: 30px;
-    font-size: 1.8rem;
+    font-size: 4rem;
+    display: flex;
+    align-items: center;
+}
+.login {
+    text-align: center;
+    display: flex;
+    align-items: center; /* Ensures 'Login | Register' is vertically centered */
+    font-size: 1.5rem;   /* Make sure the font size matches other items */
+    margin-top: 0;
 }
 
 .main-logo-font {
@@ -114,6 +128,7 @@ body {
     border-top: 2px solid #8d8bc8;
     border-bottom: 2px solid #8d8bc8;
     outline: #0f0c29 solid 5px;
+    margin: 0 auto 0 auto;
     border-radius: 15px;
     display: flex;
     align-items: center;
@@ -121,7 +136,7 @@ body {
     flex-direction: column;
     width: 100%;
     font-size: 1.4rem;
-    flex-wrap: wrap;
+    /*flex-wrap: wrap;*/
 }
 
 .footer-main {
@@ -131,7 +146,7 @@ body {
     align-items: center;
     width: 100%;
     margin-top: 40px;
-    flex-wrap: wrap;
+    /*flex-wrap: wrap;*/
 }
 
 .footer-content {
@@ -206,6 +221,9 @@ body {
 
 }
 @media only screen and (max-width: 872px) {
+    .footer-container {
+        width: 95%;
+    }
     .menu-logo-container a:first-child {
         width: 60px;
     }

@@ -1,0 +1,12 @@
+body {
+    height: 100vh;
+}
+
+.profile-image {
+    width: 100%;
+}
+
+.profile {
+    width: 25%;
+    /*margin-bottom: 100px;*/
+}

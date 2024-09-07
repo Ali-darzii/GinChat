@@ -76,6 +76,7 @@ func Urls() *gin.Engine {
 
 		}
 		//chat API
+		//
 		chat := apiV1.Group("/chat", middleware.AuthorizationJWT(jwtAuth))
 		{
 			chat.GET("/ws/", chatAPI.ChatWs)
