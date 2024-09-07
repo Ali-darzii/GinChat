@@ -1,31 +1,56 @@
 services:
+  ginchat:
+    container_name: ginchat
+    build: .
+    ports:
+      - "8080:8080"
+    restart: always
+    volumes:
+      - .:/app/
+    depends_on:
+      - postgres
+      - pgadmin
+      - redis
+    networks:
+      - GinNetwork
+
   postgres:
     image: postgres:latest
-    container_name: GinChat-postgres
+    container_name: ginchat-postgres
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: your_password
       POSTGRES_DB: GinChat
     ports:
       - "5432:5432"
+    restart: always
     networks:
-      - pgnetwork
+      - GinNetwork
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: GinChat-pgadmin
+    container_name: ginchat-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: youremail@gmail.com
       PGADMIN_DEFAULT_PASSWORD: your_password
     ports:
-      - "8080:80"
+      - "8000:8000"
+    restart: always
     networks:
-      - pgnetwork
+      - GinNetwork
 
+  redis:
+    image: redis:7.0.11-alpine
+    container_name: ginchat-redis
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - GinNetwork
 networks:
-  pgnetwork:
+  GinNetwork:
     driver: bridge
 
 volumes:
