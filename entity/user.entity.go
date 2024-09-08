@@ -8,6 +8,7 @@ type User struct {
 	ID       uint    `gorm:"primary_key:auto_increment" json:"id"`
 	Name     *string `gorm:"type:varchar(50);NULL" json:"name"`
 	Username *string `gorm:"type:varchar(50);min=5;unique;NULL" json:"username"`
+	Avatar   *string `gorm:"type:varchar(100);NULL" json:"avatar_url"`
 	IsActive bool    `gorm:"type:bool;default:true" json:"is_active"`
 	IsAdmin  bool    `gorm:"type:bool;default:false" json:"is_admin"`
 

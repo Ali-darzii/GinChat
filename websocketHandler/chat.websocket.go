@@ -217,7 +217,6 @@ func (c *Client) Write() {
 		}
 	}
 }
-
 func (c *Client) Disconnect() {
 	Manager.Unregister <- c
 	_ = c.Socket.Close()

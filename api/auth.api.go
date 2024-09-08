@@ -6,12 +6,14 @@ import (
 	"GinChat/service"
 	"GinChat/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"net/http"
 )
 
 type AuthAPI interface {
 	Register(*gin.Context)
 	Login(*gin.Context)
+	ProfileUpdate(request *gin.Context)
 }
 
 type authAPI struct {
@@ -48,7 +50,6 @@ func (a authAPI) Register(request *gin.Context) {
 	request.JSON(http.StatusOK, gin.H{"data": "sent", "is_signup": isSignup})
 	return
 }
-
 func (a authAPI) Login(request *gin.Context) {
 	var loginRequest serializer.LoginRequest
 
@@ -78,7 +79,7 @@ func (a authAPI) Login(request *gin.Context) {
 		}
 	}
 
-	// todo: test issue 
+	// todo: test issue
 	request.SetCookie(
 		"loginAttempt",
 		"", -1,
@@ -98,5 +99,18 @@ func (a authAPI) Login(request *gin.Context) {
 		return
 	}
 	request.JSON(http.StatusOK, token)
+	return
+}
+func (a authAPI) ProfileUpdate(request *gin.Context) {
+	var profileUpdateRequest serializer.ProfileUpdateRequest
+	if err := request.ShouldBindWith(&profileUpdateRequest, binding.FormMultipart); err != nil {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
+	}
+	if err := request.SaveUploadedFile(profileUpdateRequest.Avatar, "assets/uploads/"+profileUpdateRequest.Avatar.Filename); err != nil {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
+	}
+
 	return
 }

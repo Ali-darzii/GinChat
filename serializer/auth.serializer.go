@@ -1,5 +1,7 @@
 package serializer
 
+import "mime/multipart"
+
 type Token struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
@@ -13,4 +15,10 @@ type LoginRequest struct {
 	PhoneNo string `binding:"required,phone_validator" json:"phone_no"`
 	Token   int    `binding:"required" json:"token"`
 	Name    string `binding:"name_validator" json:"name"`
+}
+
+type ProfileUpdateRequest struct {
+	Avatar   *multipart.FileHeader `binding:"image_validator" json:"avatar" form:"avatar"`
+	Name     string                `binding:"required" json:"name" form:"name"`
+	Username string                `json:"username" form:"username"`
 }

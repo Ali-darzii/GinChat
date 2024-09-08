@@ -50,10 +50,13 @@ func Urls() *gin.Engine {
 			if err := v.RegisterValidation("phone_validator", validators.PhoneNoValidate); err != nil {
 				panic("validator issue in URLS")
 			}
-			if err := v.RegisterValidation("name_validator", validators.NameValidator); err != nil {
+			if err := v.RegisterValidation("name_validator", validators.NameValidate); err != nil {
 				panic("validator issue in URLS")
 			}
 			if err := v.RegisterValidation("username_validator", validators.UsernameValidate); err != nil {
+				panic("validator issue in URLS")
+			}
+			if err := v.RegisterValidation("image_validator", validators.ImageValidate); err != nil {
 				panic("validator issue in URLS")
 			}
 		}
@@ -63,12 +66,12 @@ func Urls() *gin.Engine {
 
 	apiV1 := router.Group("api/v1")
 	{
+		apiV1.PUT("/profile-update", authAPI.ProfileUpdate, middleware.AuthorizationJWT(jwtAuth))
 		//Authentication API
 		auth := apiV1.Group("/auth", middleware.NotAuthorization())
 		{
 			auth.POST("", authAPI.Register)
 			auth.PUT("", authAPI.Login, middleware.LoginAttemptCheck())
-
 		}
 		user := apiV1.Group("/user", middleware.AuthorizationJWT(jwtAuth))
 		{

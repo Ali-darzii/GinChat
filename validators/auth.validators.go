@@ -2,6 +2,7 @@ package validators
 
 import (
 	"github.com/go-playground/validator/v10"
+	"mime/multipart"
 	"strings"
 	"unicode"
 )
@@ -18,7 +19,6 @@ func PhoneNoValidate(fl validator.FieldLevel) bool {
 	}
 	return true
 }
-
 func UsernameValidate(fl validator.FieldLevel) bool {
 	// handling ->  not first not last == underScore
 	username := fl.Field().String()
@@ -41,11 +41,32 @@ func UsernameValidate(fl validator.FieldLevel) bool {
 
 	return false
 }
-
-func NameValidator(fl validator.FieldLevel) bool {
+func NameValidate(fl validator.FieldLevel) bool {
 	name := fl.Field().String()
 	if name != "" {
 		return len(name) > 3
+	}
+	return true
+}
+func ImageValidate(fl validator.FieldLevel) bool {
+	Image, ok := fl.Field().Interface().(multipart.FileHeader)
+	if !ok {
+		return false
+	}
+	// format Check
+	var ImageFormats = []string{"png", "jpg", "jpeg", "webp"}
+	var formatCheck bool
+	for _, item := range ImageFormats {
+		if Image.Filename[len(Image.Filename)-3:] == item {
+			formatCheck = true
+		}
+	}
+	if !formatCheck {
+		return false
+	}
+	// Size > 6mb
+	if Image.Size > 6000 {
+		return false
 	}
 	return true
 }
