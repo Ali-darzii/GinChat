@@ -16,4 +16,5 @@ var (
 	SomethingWentWrong      = gin.H{"status": false, "error_code": 8, "detail": "We_Don't_Know_What_Happened"}
 	TooManyLoginRequest     = gin.H{"status": false, "error_code": 9, "detail": "Ip_Banned_For_15_min"}
 	CanNotReachWsConnection = gin.H{"status": false, "error_code": 10, "detail": "Can_Not_Reach_Ws_Connection"}
+	UserNameIsTaken         = gin.H{"status": false, "error_code": 11, "detail": "User_Name_Is_Taken"}
 )

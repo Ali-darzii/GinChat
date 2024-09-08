@@ -3,6 +3,7 @@ package validators
 import (
 	"github.com/go-playground/validator/v10"
 	"mime/multipart"
+	"path/filepath"
 	"strings"
 	"unicode"
 )
@@ -44,7 +45,7 @@ func UsernameValidate(fl validator.FieldLevel) bool {
 func NameValidate(fl validator.FieldLevel) bool {
 	name := fl.Field().String()
 	if name != "" {
-		return len(name) > 3
+		return len(name) >= 3
 	}
 	return true
 }
@@ -54,10 +55,11 @@ func ImageValidate(fl validator.FieldLevel) bool {
 		return false
 	}
 	// format Check
-	var ImageFormats = []string{"png", "jpg", "jpeg", "webp"}
+	ext := filepath.Ext(Image.Filename)
+	var ImageFormats = []string{".png", ".jpg", ".jpeg", ".webp"}
 	var formatCheck bool
 	for _, item := range ImageFormats {
-		if Image.Filename[len(Image.Filename)-3:] == item {
+		if ext == item {
 			formatCheck = true
 		}
 	}

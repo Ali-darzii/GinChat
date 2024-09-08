@@ -7,13 +7,18 @@ import (
 	"GinChat/utils"
 	"errors"
 	"fmt"
+	uuid "github.com/satori/go.uuid"
 	_ "math/rand/v2"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
 type AuthService interface {
 	Register(serializer.RegisterRequest) (bool, error)
 	Login(serializer.LoginRequest) (entity.User, error)
+	ProfileUpdate(serializer.ProfileUpdateRequest) (serializer.ProfileUpdateRequest, error)
 }
 
 type authService struct {
@@ -42,7 +47,7 @@ func (a authService) Register(registerRequest serializer.RegisterRequest) (bool,
 		var token = utils.SmsTokenGenerate()
 		user.Phone.Token = &token
 		user.Phone.ExpTime = &expTime
-		if err := a.authRepository.PhoneSave(user.Phone); err != nil {
+		if err = a.authRepository.PhoneSave(user.Phone); err != nil {
 			return isSignup, err
 		}
 		fmt.Println(*user.Phone.Token)
@@ -61,7 +66,7 @@ func (a authService) Register(registerRequest serializer.RegisterRequest) (bool,
 		},
 	}
 	fmt.Println(*newUser.Phone.Token)
-	if err := a.authRepository.NewUserSave(newUser); err != nil {
+	if err = a.authRepository.NewUserSave(newUser); err != nil {
 		return isSignup, err
 	}
 	return isSignup, nil
@@ -87,12 +92,32 @@ func (a authService) Login(loginRequest serializer.LoginRequest) (entity.User, e
 	user.Phone.ExpTime = nil
 	user.Phone.Token = nil
 
-	if err := a.authRepository.UserSave(user); err != nil {
+	if err = a.authRepository.UserSave(user); err != nil {
 		return entity.User{}, err
 	}
-	if err := a.authRepository.PhoneSave(user.Phone); err != nil {
+	if err = a.authRepository.PhoneSave(user.Phone); err != nil {
 		return entity.User{}, err
 	}
 
 	return user, nil
+}
+func (a authService) ProfileUpdate(profile serializer.ProfileUpdateRequest) (serializer.ProfileUpdateRequest, error) {
+	// unique image name check
+	var newImageName string
+	if _, err := os.Open("assets/uploads/" + profile.Avatar.Filename); err == nil {
+		index := strings.Index(profile.Avatar.Filename, ".")
+		noFormatName := profile.Avatar.Filename[:index]
+		FormatName := filepath.Ext(profile.Avatar.Filename)
+		newImageName = noFormatName + uuid.NewV4().String() + FormatName
+		profile.Avatar.Filename = newImageName
+	} else {
+		newImageName = profile.Avatar.Filename
+	}
+
+	updatedProfile, err := a.authRepository.ProfileUpdate(profile)
+	if err != nil {
+		return serializer.ProfileUpdateRequest{}, err
+	}
+	return updatedProfile, nil
+
 }

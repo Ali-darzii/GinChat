@@ -107,10 +107,23 @@ func (a authAPI) ProfileUpdate(request *gin.Context) {
 		request.JSON(http.StatusBadRequest, utils.BadFormat)
 		return
 	}
-	if err := request.SaveUploadedFile(profileUpdateRequest.Avatar, "assets/uploads/"+profileUpdateRequest.Avatar.Filename); err != nil {
-		request.JSON(http.StatusBadRequest, utils.BadFormat)
-		return
+	phoneNo, exist := request.Get("phoneNo")
+	if !exist {
+		request.JSON(http.StatusInternalServerError, utils.TokenIsExpiredOrInvalid)
 	}
-
+	profileUpdateRequest.PhoneNo = phoneNo.(string)
+	updatedProfile, err := a.service.ProfileUpdate(profileUpdateRequest)
+	if err != nil {
+		if err.Error() == "username_taken" {
+			request.JSON(http.StatusBadRequest, utils.UserNameIsTaken)
+			return
+		}
+		request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
+	}
+	//if err = request.SaveUploadedFile(profileUpdateRequest.Avatar, "assets/uploads/"+profileUpdateRequest.Avatar.Filename); err != nil {
+	//	request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
+	//	return
+	//}
+	request.JSON(http.StatusOK, updatedProfile)
 	return
 }

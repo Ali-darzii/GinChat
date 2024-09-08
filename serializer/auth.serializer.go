@@ -18,7 +18,17 @@ type LoginRequest struct {
 }
 
 type ProfileUpdateRequest struct {
+	ID       uint                  `json:"id" form:"id"`
+	PhoneNo  string                `json:"phone_no" form:"phone_no"`
 	Avatar   *multipart.FileHeader `binding:"image_validator" json:"avatar" form:"avatar"`
-	Name     string                `binding:"required" json:"name" form:"name"`
+	Name     string                `binding:"required,name_validator" json:"name" form:"name"`
 	Username string                `json:"username" form:"username"`
+}
+
+type UpdatedProfile struct {
+	ID       uint   `json:"id" form:"id"`
+	PhoneNo  string `json:"phone_no" form:"phone_no"`
+	Avatar   string `json:"avatar" form:"avatar"`
+	Name     string `json:"name" form:"name"`
+	Username string `json:"username" form:"username"`
 }
