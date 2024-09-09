@@ -19,7 +19,7 @@ type LoginRequest struct {
 
 type ProfileUpdateRequest struct {
 	ID       uint                  `json:"id" form:"id"`
-	Avatar   *multipart.FileHeader `binding:"image_validator" json:"avatar" form:"avatar"`
+	Avatar   *multipart.FileHeader `json:"avatar" form:"avatar"`
 	Name     string                `binding:"required,name_validator" json:"name" form:"name"`
 	Username string                `json:"username" form:"username"`
 }

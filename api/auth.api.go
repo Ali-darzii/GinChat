@@ -123,12 +123,14 @@ func (a authAPI) ProfileUpdate(request *gin.Context) {
 		}
 		request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
 	}
-	profileUpdateRequest.Avatar.Filename = updatedProfile.Avatar[26:]
-
-	if err = request.SaveUploadedFile(profileUpdateRequest.Avatar, "assets/uploads/"+profileUpdateRequest.Avatar.Filename); err != nil {
-		request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
-		return
+	if profileUpdateRequest.Avatar != nil {
+		profileUpdateRequest.Avatar.Filename = updatedProfile.Avatar[26:]
+		if err = request.SaveUploadedFile(profileUpdateRequest.Avatar, "assets/uploads/userAvatar/"+profileUpdateRequest.Avatar.Filename); err != nil {
+			request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
+			return
+		}
 	}
+
 	request.JSON(http.StatusOK, updatedProfile)
 	return
 }

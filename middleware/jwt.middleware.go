@@ -3,7 +3,6 @@ package middleware
 import (
 	"GinChat/pkg/JWT"
 	"GinChat/utils"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
@@ -24,7 +23,6 @@ func AuthorizationJWT(jwtService JWT.JwtService) gin.HandlerFunc {
 			request.AbortWithStatusJSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
 			return
 		}
-		fmt.Println(user.Phone.PhoneNo)
 		request.Set("phoneNo", user.Phone.PhoneNo)
 		return
 	}

@@ -7,11 +7,7 @@ import (
 	"GinChat/utils"
 	"errors"
 	"fmt"
-	uuid "github.com/satori/go.uuid"
 	_ "math/rand/v2"
-	"os"
-	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -103,21 +99,20 @@ func (a authService) Login(loginRequest serializer.LoginRequest) (entity.User, e
 }
 func (a authService) ProfileUpdate(profile serializer.ProfileUpdateRequest) (serializer.UpdatedProfile, error) {
 	// unique image name check
-	newImagePath := "assets/uploads/userAvatar/"
-	if _, err := os.Open("assets/uploads/userAvatar/" + profile.Avatar.Filename); err == nil {
-		index := strings.Index(profile.Avatar.Filename, ".")
-		noFormatName := profile.Avatar.Filename[:index]
-		FormatName := filepath.Ext(profile.Avatar.Filename)
-		newImagePath += noFormatName + uuid.NewV4().String() + FormatName
-	} else {
-		newImagePath += profile.Avatar.Filename
+	var imagePath string
+	if profile.Avatar != nil {
+		if ok := utils.ImageValidate(profile.Avatar); !ok {
+			return serializer.UpdatedProfile{}, errors.New("bad_format")
+		}
+		imagePath = "assets/uploads/userAvatar/"
+		imagePath = utils.ImageController(imagePath, profile.Avatar.Filename)
 	}
 
 	user := entity.User{
 		ID:       profile.ID,
 		Name:     &profile.Name,
 		Username: &profile.Username,
-		Avatar:   &newImagePath,
+		Avatar:   &imagePath,
 	}
 
 	updatedProfile, err := a.authRepository.ProfileUpdate(user)

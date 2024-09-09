@@ -5,9 +5,13 @@ import (
 	"GinChat/entity"
 	"github.com/gin-gonic/gin"
 	"github.com/mssola/user_agent"
+	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"math/rand/v2"
+	"mime/multipart"
 	"net"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -33,17 +37,14 @@ func GetClientIP(request *gin.Context) string {
 	}
 	return ip
 }
-
 func GetExpiryTime() time.Time {
 	const expTime int8 = 60
 	return time.Now().Add(time.Second * time.Duration(expTime))
 
 }
-
 func SmsTokenGenerate() int {
 	return rand.IntN(8999) + 1000
 }
-
 func UserLoggedIn(request *gin.Context, user entity.User) error {
 	var postDb *gorm.DB = db.ConnectPostgres()
 	var userLogins entity.UserLogins
@@ -76,4 +77,34 @@ func UserLoggedIn(request *gin.Context, user entity.User) error {
 	}
 
 	return nil
+}
+func ImageValidate(image *multipart.FileHeader) bool {
+	// format Check
+	ext := filepath.Ext(image.Filename)
+	var ImageFormats = []string{".png", ".jpg", ".jpeg", ".webp"}
+	var formatCheck bool
+	for _, item := range ImageFormats {
+		if ext == item {
+			formatCheck = true
+		}
+	}
+	if !formatCheck {
+		return false
+	}
+	// Size > 6mb
+	if image.Size > 6000 {
+		return false
+	}
+	return true
+}
+func ImageController(imagePath string, imageName string) string {
+	if _, err := os.Open(imagePath + imageName); err == nil {
+		index := strings.Index(imageName, ".")
+		noFormatName := imageName[:index]
+		FormatName := filepath.Ext(imageName)
+		imagePath += noFormatName + uuid.NewV4().String() + FormatName
+	} else {
+		imagePath += imageName
+	}
+	return imagePath
 }

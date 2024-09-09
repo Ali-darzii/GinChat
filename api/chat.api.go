@@ -8,6 +8,7 @@ import (
 	"GinChat/utils"
 	"GinChat/websocketHandler"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 	"net/http"
@@ -132,7 +133,7 @@ func (c chatAPI) MakeGroupChat(request *gin.Context) {
 		return
 	}
 	var makeChatRequest serializer.MakeGroupChatRequest
-	if err := request.ShouldBind(&makeChatRequest); err != nil {
+	if err := request.ShouldBindWith(&makeChatRequest, binding.FormMultipart); err != nil {
 		request.JSON(http.StatusBadRequest, utils.BadFormat)
 		return
 	}

@@ -1,6 +1,7 @@
 package serializer
 
 import (
+	"mime/multipart"
 	"time"
 )
 
@@ -46,8 +47,9 @@ func (c Message) NewPrivateMessageValidate() bool {
 }
 
 type MakeGroupChatRequest struct {
-	Name       string `binding:"required" json:"name"`
-	Recipients []uint `binding:"required" json:"recipients_id"`
+	Avatar     *multipart.FileHeader `binding:"image_validator" json:"avatar" form:"avatar"`
+	Name       string                `binding:"required" json:"name"`
+	Recipients []uint                `binding:"required" json:"recipients_id"`
 }
 
 type PaginationRequest struct {
