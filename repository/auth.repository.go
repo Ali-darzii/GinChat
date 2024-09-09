@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
+	"os"
 )
 
 type AuthRepository interface {
@@ -13,7 +14,7 @@ type AuthRepository interface {
 	PhoneSave(entity.Phone) error
 	FindByPhone(string) (entity.User, error)
 	NewUserSave(user entity.User) error
-	ProfileUpdate(serializer.ProfileUpdateRequest) (serializer.ProfileUpdateRequest, error)
+	ProfileUpdate(entity.User) (serializer.UpdatedProfile, error)
 }
 
 type authRepository struct {
@@ -63,21 +64,25 @@ func (a authRepository) FindByPhone(phoneNo string) (entity.User, error) {
 	user.Phone = phone
 	return user, nil
 }
-func (a authRepository) ProfileUpdate(profile serializer.ProfileUpdateRequest) (serializer.ProfileUpdateRequest, error) {
-	var userCheck entity.User
-	if res := a.postgresConn.Where("username = ?", profile.Username).Take(&userCheck); res.Error == nil {
-		return serializer.ProfileUpdateRequest{}, errors.New("username_taken")
+func (a authRepository) ProfileUpdate(user entity.User) (serializer.UpdatedProfile, error) {
+	//unique username check
+	var userUsernameCheck entity.User
+	if res := a.postgresConn.Where("username = ? AND id != ?", user.Username, user.ID).Take(&userUsernameCheck); res.Error == nil {
+		return serializer.UpdatedProfile{}, errors.New("username_taken")
 	}
+	// remove old avatar if exist
+	var userImageRemove entity.User
+	if res := a.postgresConn.Where("id = ?", user.ID).Take(&userImageRemove); res.Error != nil {
+		return serializer.UpdatedProfile{}, res.Error
+	}
+	if *userImageRemove.Avatar != "" {
+		os.Remove(*userImageRemove.Avatar)
+	}
+
 	var updatedProfile serializer.UpdatedProfile
-	res := a.postgresConn.Table("users").Take(&updatedProfile).
-		Where("phone_no = ?", profile.PhoneNo).
-		Updates(entity.User{
-			Name:     &profile.Name,
-			Username: &profile.Username,
-			Avatar:   &profile.Avatar.Filename,
-		})
-	if res != nil {
-		return serializer.ProfileUpdateRequest{}, res.Error
+	res := a.postgresConn.Save(&user).Find(&updatedProfile)
+	if res.Error != nil {
+		return serializer.UpdatedProfile{}, res.Error
 	}
-	return profile, nil
+	return updatedProfile, nil
 }

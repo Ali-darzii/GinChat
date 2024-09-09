@@ -5,9 +5,11 @@ import (
 	"GinChat/serializer"
 	"GinChat/service"
 	"GinChat/utils"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"net/http"
+	"strconv"
 )
 
 type AuthAPI interface {
@@ -107,11 +109,13 @@ func (a authAPI) ProfileUpdate(request *gin.Context) {
 		request.JSON(http.StatusBadRequest, utils.BadFormat)
 		return
 	}
-	phoneNo, exist := request.Get("phoneNo")
-	if !exist {
-		request.JSON(http.StatusInternalServerError, utils.TokenIsExpiredOrInvalid)
+	id, err := strconv.ParseInt(request.Param("id"), 10, 32)
+	if err != nil {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
 	}
-	profileUpdateRequest.PhoneNo = phoneNo.(string)
+	profileUpdateRequest.ID = uint(id)
+
 	updatedProfile, err := a.service.ProfileUpdate(profileUpdateRequest)
 	if err != nil {
 		if err.Error() == "username_taken" {
@@ -120,10 +124,13 @@ func (a authAPI) ProfileUpdate(request *gin.Context) {
 		}
 		request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
 	}
-	//if err = request.SaveUploadedFile(profileUpdateRequest.Avatar, "assets/uploads/"+profileUpdateRequest.Avatar.Filename); err != nil {
-	//	request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
-	//	return
-	//}
+	fmt.Println(updatedProfile.Avatar)
+	profileUpdateRequest.Avatar.Filename = updatedProfile.Avatar[15:]
+	fmt.Println(profileUpdateRequest.Avatar.Filename)
+	if err = request.SaveUploadedFile(profileUpdateRequest.Avatar, "assets/uploads/"+profileUpdateRequest.Avatar.Filename); err != nil {
+		request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
+		return
+	}
 	request.JSON(http.StatusOK, updatedProfile)
 	return
 }

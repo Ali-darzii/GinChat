@@ -18,7 +18,7 @@ import (
 type AuthService interface {
 	Register(serializer.RegisterRequest) (bool, error)
 	Login(serializer.LoginRequest) (entity.User, error)
-	ProfileUpdate(serializer.ProfileUpdateRequest) (serializer.ProfileUpdateRequest, error)
+	ProfileUpdate(serializer.ProfileUpdateRequest) (serializer.UpdatedProfile, error)
 }
 
 type authService struct {
@@ -101,22 +101,28 @@ func (a authService) Login(loginRequest serializer.LoginRequest) (entity.User, e
 
 	return user, nil
 }
-func (a authService) ProfileUpdate(profile serializer.ProfileUpdateRequest) (serializer.ProfileUpdateRequest, error) {
+func (a authService) ProfileUpdate(profile serializer.ProfileUpdateRequest) (serializer.UpdatedProfile, error) {
 	// unique image name check
-	var newImageName string
+	newImageUrl := "assets/uploads/"
 	if _, err := os.Open("assets/uploads/" + profile.Avatar.Filename); err == nil {
 		index := strings.Index(profile.Avatar.Filename, ".")
 		noFormatName := profile.Avatar.Filename[:index]
 		FormatName := filepath.Ext(profile.Avatar.Filename)
-		newImageName = noFormatName + uuid.NewV4().String() + FormatName
-		profile.Avatar.Filename = newImageName
+		newImageUrl += noFormatName + uuid.NewV4().String() + FormatName
 	} else {
-		newImageName = profile.Avatar.Filename
+		newImageUrl += profile.Avatar.Filename
 	}
 
-	updatedProfile, err := a.authRepository.ProfileUpdate(profile)
+	user := entity.User{
+		ID:       profile.ID,
+		Name:     &profile.Name,
+		Username: &profile.Username,
+		Avatar:   &newImageUrl,
+	}
+
+	updatedProfile, err := a.authRepository.ProfileUpdate(user)
 	if err != nil {
-		return serializer.ProfileUpdateRequest{}, err
+		return serializer.UpdatedProfile{}, err
 	}
 	return updatedProfile, nil
 

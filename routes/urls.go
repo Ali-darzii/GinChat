@@ -66,20 +66,19 @@ func Urls() *gin.Engine {
 
 	apiV1 := router.Group("api/v1")
 	{
-		apiV1.PUT("/profile-update", authAPI.ProfileUpdate, middleware.AuthorizationJWT(jwtAuth))
 		//Authentication API
 		auth := apiV1.Group("/auth", middleware.NotAuthorization())
 		{
 			auth.POST("", authAPI.Register)
 			auth.PUT("", authAPI.Login, middleware.LoginAttemptCheck())
 		}
+		//user API
 		user := apiV1.Group("/user", middleware.AuthorizationJWT(jwtAuth))
 		{
-			user.POST("")
+			user.PUT("/profile-update/:id/", authAPI.ProfileUpdate)
 
 		}
 		//chat API
-		//
 		chat := apiV1.Group("/chat", middleware.AuthorizationJWT(jwtAuth))
 		{
 			chat.GET("/ws/", chatAPI.ChatWs)
