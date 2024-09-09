@@ -19,6 +19,7 @@ type PrivateMessageRoom struct {
 
 type GroupRoom struct {
 	ID               uint             `gorm:"primary_key:auto_increment" json:"id"`
+	Avatar           *string          `gorm:"type:varchar(100);NULL" json:"avatar"`
 	Name             string           `gorm:"type:varchar(50);NOT NULL" json:"name"`
 	Users            []User           `gorm:"many2many:group_users;" json:"group_users"`
 	Admins           []User           `gorm:"many2many:group_admins;" json:"admins"`

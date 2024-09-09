@@ -103,21 +103,21 @@ func (a authService) Login(loginRequest serializer.LoginRequest) (entity.User, e
 }
 func (a authService) ProfileUpdate(profile serializer.ProfileUpdateRequest) (serializer.UpdatedProfile, error) {
 	// unique image name check
-	newImageUrl := "assets/uploads/"
-	if _, err := os.Open("assets/uploads/" + profile.Avatar.Filename); err == nil {
+	newImagePath := "assets/uploads/userAvatar/"
+	if _, err := os.Open("assets/uploads/userAvatar/" + profile.Avatar.Filename); err == nil {
 		index := strings.Index(profile.Avatar.Filename, ".")
 		noFormatName := profile.Avatar.Filename[:index]
 		FormatName := filepath.Ext(profile.Avatar.Filename)
-		newImageUrl += noFormatName + uuid.NewV4().String() + FormatName
+		newImagePath += noFormatName + uuid.NewV4().String() + FormatName
 	} else {
-		newImageUrl += profile.Avatar.Filename
+		newImagePath += profile.Avatar.Filename
 	}
 
 	user := entity.User{
 		ID:       profile.ID,
 		Name:     &profile.Name,
 		Username: &profile.Username,
-		Avatar:   &newImageUrl,
+		Avatar:   &newImagePath,
 	}
 
 	updatedProfile, err := a.authRepository.ProfileUpdate(user)

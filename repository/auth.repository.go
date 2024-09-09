@@ -65,7 +65,7 @@ func (a authRepository) FindByPhone(phoneNo string) (entity.User, error) {
 	return user, nil
 }
 func (a authRepository) ProfileUpdate(user entity.User) (serializer.UpdatedProfile, error) {
-	//unique username check
+	//unique username check completely
 	var userUsernameCheck entity.User
 	if res := a.postgresConn.Where("username = ? AND id != ?", user.Username, user.ID).Take(&userUsernameCheck); res.Error == nil {
 		return serializer.UpdatedProfile{}, errors.New("username_taken")

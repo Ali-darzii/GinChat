@@ -43,7 +43,7 @@ var (
 	postDb *gorm.DB = db.ConnectPostgres()
 )
 
-// *only this ChatWs don't use api repo service structure
+// *only this ChatWs don't use api service repo structure
 func (c chatAPI) ChatWs(request *gin.Context) {
 	webSocket, err := upgrader.Upgrade(request.Writer, request.Request, nil)
 	phoneNo, exist := request.Get("phoneNo")

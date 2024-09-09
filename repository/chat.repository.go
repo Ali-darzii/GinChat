@@ -47,7 +47,7 @@ func (c chatRepository) GetAllUsers(paginationRequest serializer.PaginationReque
 		Limit(paginationRequest.Limit).
 		Offset(paginationRequest.Offset).
 		Table("users").
-		Select("users.id as user_id, users.name, users.username, COALESCE(private_rooms.id, 0) as room_id, CASE WHEN private_rooms.id IS NULL THEN ? ELSE 0 END as my_user_id", userId).
+		Select("users.avatar, users.id as user_id, users.name, users.username, COALESCE(private_rooms.id, 0) as room_id, CASE WHEN private_rooms.id IS NULL THEN ? ELSE 0 END as my_user_id", userId).
 		Joins("LEFT JOIN pv_users ON users.id = pv_users.user_id").
 		Joins("LEFT JOIN private_rooms ON private_rooms.id = pv_users.private_room_id").
 		Where("private_rooms.id IN (?) OR private_rooms.id IS NULL", c.postgresConn.Table("pv_users").

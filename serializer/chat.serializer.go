@@ -67,6 +67,7 @@ type MakeNewChatRequest struct {
 }
 
 type UserInRoom struct {
+	Avatar    string    `json:"avatar" form:"avatar"`
 	UserID    uint      `json:"user_id"`
 	Name      *string   `json:"name"`
 	Username  *string   `json:"username"`

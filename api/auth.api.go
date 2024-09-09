@@ -5,7 +5,6 @@ import (
 	"GinChat/serializer"
 	"GinChat/service"
 	"GinChat/utils"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"net/http"
@@ -124,9 +123,8 @@ func (a authAPI) ProfileUpdate(request *gin.Context) {
 		}
 		request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
 	}
-	fmt.Println(updatedProfile.Avatar)
-	profileUpdateRequest.Avatar.Filename = updatedProfile.Avatar[15:]
-	fmt.Println(profileUpdateRequest.Avatar.Filename)
+	profileUpdateRequest.Avatar.Filename = updatedProfile.Avatar[26:]
+
 	if err = request.SaveUploadedFile(profileUpdateRequest.Avatar, "assets/uploads/"+profileUpdateRequest.Avatar.Filename); err != nil {
 		request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
 		return
