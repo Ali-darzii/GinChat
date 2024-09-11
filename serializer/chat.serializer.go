@@ -28,6 +28,7 @@ type SendPvMessage struct {
 }
 
 type NewGroupChat struct {
+	Avatar  string `json:"avatar" form:"avatar"`
 	Type    string `json:"type"`
 	RoomID  uint   `json:"room_id"`
 	Members []uint `json:"members"`
@@ -49,8 +50,8 @@ func (c Message) NewPrivateMessageValidate() bool {
 
 type MakeGroupChatRequest struct {
 	Avatar     *multipart.FileHeader `json:"avatar" form:"avatar"`
-	Name       string                `binding:"required" json:"name"`
-	Recipients []uint                `binding:"required" json:"recipients_id"`
+	Name       string                `binding:"required" json:"name" form:"name"`
+	Recipients []uint                `binding:"required" json:"recipients_id" form:"recipients_id"`
 }
 
 type PaginationRequest struct {

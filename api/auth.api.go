@@ -26,7 +26,6 @@ func NewAuthAPI(service service.AuthService) AuthAPI {
 		service: service,
 	}
 }
-
 func (a authAPI) Register(request *gin.Context) {
 	/*  send phone msg with db data creation  */
 	var registerRequest serializer.RegisterRequest

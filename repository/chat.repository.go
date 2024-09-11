@@ -20,7 +20,7 @@ type ChatRepository interface {
 	GetAllUsers(serializer.PaginationRequest, uint) ([]serializer.UserInRoom, int64, error)
 	GetAllRooms(uint) ([]serializer.Room, error)
 	MakePvChat(serializer.MakeNewChatRequest, uint) (serializer.Message, error)
-	MakeGroupChat(entity.GroupRoom) error
+	MakeGroupChat(entity.GroupRoom) (entity.GroupRoom, error)
 }
 type chatRepository struct {
 	postgresConn *gorm.DB
@@ -167,11 +167,11 @@ func (c chatRepository) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequ
 
 	return message, nil
 }
-func (c chatRepository) MakeGroupChat(groupRoom entity.GroupRoom) error {
+func (c chatRepository) MakeGroupChat(groupRoom entity.GroupRoom) (entity.GroupRoom, error) {
 	if res := c.postgresConn.Save(&groupRoom); res.Error != nil {
-		return res.Error
+		return entity.GroupRoom{}, res.Error
 	}
 
-	return nil
+	return groupRoom, nil
 
 }

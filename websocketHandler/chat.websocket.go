@@ -94,6 +94,7 @@ func (manager *ClientManager) Start() {
 
 			case "new_group_message":
 				gpMessage := serializer.NewGroupChat{
+					Avatar:  message.Avatar,
 					Type:    message.Type,
 					RoomID:  message.RoomID,
 					Members: message.Recipients,

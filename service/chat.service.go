@@ -109,7 +109,8 @@ func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChat
 		groupRoom.Users = append(groupRoom.Users, entity.User{ID: id})
 	}
 
-	if err = c.chatRepository.MakeGroupChat(groupRoom); err != nil {
+	groupRoom, err = c.chatRepository.MakeGroupChat(groupRoom)
+	if err != nil {
 		return serializer.Message{}, err
 	}
 
