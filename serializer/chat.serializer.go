@@ -77,6 +77,7 @@ type UserInRoom struct {
 	TimeStamp time.Time `json:"time_stamp"`
 }
 type UserInGpRoom struct {
+	Avatar    string    `json:"avatar"`
 	UserID    uint      `json:"user_id"`
 	RoomID    uint      `json:"room_id"`
 	GroupName string    `json:"group_name"`
@@ -93,6 +94,7 @@ type UserAPI struct {
 
 type Room struct {
 	RoomType  string     `json:"room_type"`
+	Avatar    string     `json:"avatar"`
 	RoomID    uint       `json:"room_id"`
 	Name      string     `json:"name"`
 	Users     []UserAPI  `json:"users"`

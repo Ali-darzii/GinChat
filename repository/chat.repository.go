@@ -73,7 +73,7 @@ func (c chatRepository) GetAllRooms(userId uint) ([]serializer.Room, error) {
 	var allRooms []serializer.Room
 	var pvRooms []serializer.UserInRoom
 	c.postgresConn.Table("users").
-		Select("users.id as user_id, users.name, users.username, COALESCE(private_rooms.id, 0) as room_id, MAX(private_message_rooms.timestamp) as time_stamp").
+		Select("users.avatar, users.id as user_id, users.name, users.username, COALESCE(private_rooms.id, 0) as room_id, MAX(private_message_rooms.timestamp) as time_stamp").
 		Joins("LEFT JOIN pv_users ON users.id = pv_users.user_id").
 		Joins("LEFT JOIN private_rooms ON private_rooms.id = pv_users.private_room_id").
 		Joins("LEFT JOIN private_message_rooms ON private_message_rooms.private_id = private_rooms.id").
@@ -91,13 +91,14 @@ func (c chatRepository) GetAllRooms(userId uint) ([]serializer.Room, error) {
 				Username: room.Username,
 				Name:     room.Name,
 			}},
+			Avatar:    room.Avatar,
 			RoomID:    room.RoomID,
 			TimeStamp: &room.TimeStamp,
 		})
 	}
 	var gpRooms []serializer.UserInGpRoom
 	c.postgresConn.Table("users").
-		Select("users.id as user_id, users.name, users.username, COALESCE(group_rooms.id, 0) as room_id, group_rooms.name as group_name, MAX(group_message_rooms.timestamp) as time_stamp").
+		Select("users.avatar, users.id as user_id, users.name, users.username, COALESCE(group_rooms.id, 0) as room_id, group_rooms.name as group_name, MAX(group_message_rooms.timestamp) as time_stamp").
 		Joins("LEFT JOIN group_users ON users.id = group_users.user_id").
 		Joins("LEFT JOIN group_rooms ON group_rooms.id = group_users.group_room_id").
 		Joins("LEFT JOIN group_message_rooms ON group_rooms.id = group_message_rooms.group_id").
@@ -119,6 +120,7 @@ func (c chatRepository) GetAllRooms(userId uint) ([]serializer.Room, error) {
 		} else {
 			roomMap[userInRoom.RoomID] = &serializer.Room{
 				RoomType: "gp_room",
+				Avatar:   userInRoom.Avatar,
 				RoomID:   userInRoom.RoomID,
 				Name:     userInRoom.GroupName,
 				Users: []serializer.UserAPI{
