@@ -50,6 +50,16 @@ func (a authAPI) Register(request *gin.Context) {
 	request.JSON(http.StatusOK, gin.H{"data": "sent", "is_signup": isSignup})
 	return
 }
+
+// @Summary Login User
+// @Description Authenticates a user and returns a JWT token
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param   login  body  LoginRequest  true  "Login details"
+// @Success 200 {object} JWTResponse
+// @Failure 401 {object} ErrorResponse
+// @Router /auth/login [post]
 func (a authAPI) Login(request *gin.Context) {
 	var loginRequest serializer.LoginRequest
 
