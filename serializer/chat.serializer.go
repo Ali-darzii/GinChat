@@ -13,6 +13,7 @@ type ServerMessage struct {
 
 type Message struct {
 	Type       string `json:"type"`
+	Avatar     string `json:"avatar"`
 	RoomID     uint   `json:"room_id" binding:"required"`
 	Content    string `json:"content,omitempty" binding:"required"`
 	Sender     uint   `json:"sender"`
@@ -47,7 +48,7 @@ func (c Message) NewPrivateMessageValidate() bool {
 }
 
 type MakeGroupChatRequest struct {
-	Avatar     *multipart.FileHeader `binding:"image_validator" json:"avatar" form:"avatar"`
+	Avatar     *multipart.FileHeader `json:"avatar" form:"avatar"`
 	Name       string                `binding:"required" json:"name"`
 	Recipients []uint                `binding:"required" json:"recipients_id"`
 }

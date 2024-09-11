@@ -4,7 +4,8 @@ import (
 	"GinChat/entity"
 	"GinChat/repository"
 	"GinChat/serializer"
-	"GinChat/websocketHandler"
+	"GinChat/utils"
+	"errors"
 	"fmt"
 	"strconv"
 )
@@ -13,7 +14,7 @@ type ChatService interface {
 	GetAllUsers(serializer.PaginationRequest, string) (serializer.APIUserPagination, error)
 	GetAllRooms(string) ([]serializer.Room, error)
 	MakePvChat(serializer.MakeNewChatRequest, string) (serializer.Message, error)
-	MakeGroupChat(serializer.MakeGroupChatRequest, string) error
+	MakeGroupChat(serializer.MakeGroupChatRequest, string) (serializer.Message, error)
 }
 
 type chatService struct {
@@ -83,35 +84,45 @@ func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest
 	}
 	return message, nil
 }
-func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChatRequest, phoneNo string) error {
+func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChatRequest, phoneNo string) (serializer.Message, error) {
 	userId, err := c.chatRepository.FindByPhone(phoneNo)
-	if err != nil {
-		return err
-	}
 
+	if err != nil {
+		return serializer.Message{}, err
+	}
+	var imagePath string
+	if makeGroupChatRequest.Avatar != nil {
+		if ok := utils.ImageValidate(makeGroupChatRequest.Avatar); !ok {
+			return serializer.Message{}, errors.New("bad_format")
+		}
+		imagePath = "assets/uploads/groupAvatar/"
+		imagePath = utils.ImageController(imagePath, makeGroupChatRequest.Avatar.Filename)
+	}
 	groupRoom := entity.GroupRoom{
+		Avatar: &imagePath,
 		Name:   makeGroupChatRequest.Name,
 		Users:  []entity.User{{ID: userId}},
 		Admins: []entity.User{{ID: userId}},
 	}
+
 	for _, id := range makeGroupChatRequest.Recipients {
 		groupRoom.Users = append(groupRoom.Users, entity.User{ID: id})
 	}
 
-	groupRoom, err = c.chatRepository.MakeGroupChat(groupRoom)
-	if err != nil {
-		return err
+	if err = c.chatRepository.MakeGroupChat(groupRoom); err != nil {
+		return serializer.Message{}, err
 	}
 
 	message := serializer.Message{
 		Type:       "new_group_message",
+		Avatar:     imagePath,
 		RoomID:     groupRoom.ID,
 		Sender:     userId,
 		Recipients: append(makeGroupChatRequest.Recipients, userId),
 	}
-	fmt.Println(message.Recipients)
 
-	websocketHandler.Manager.Broadcast <- message
-	return nil
+	//websocketHandler.Manager.Broadcast <- message, moved to api
+
+	return message, nil
 
 }

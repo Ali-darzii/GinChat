@@ -126,6 +126,8 @@ func (c chatAPI) MakePvChat(request *gin.Context) {
 	return
 
 }
+
+// todo: test makeGroupChat
 func (c chatAPI) MakeGroupChat(request *gin.Context) {
 	phoneNo, ok := request.Get("phoneNo")
 	if !ok {
@@ -137,11 +139,25 @@ func (c chatAPI) MakeGroupChat(request *gin.Context) {
 		request.JSON(http.StatusBadRequest, utils.BadFormat)
 		return
 	}
-	err := c.service.MakeGroupChat(makeChatRequest, phoneNo.(string))
+	message, err := c.service.MakeGroupChat(makeChatRequest, phoneNo.(string))
+	if err != nil {
+		if err.Error() == "bad_format" {
+			request.JSON(http.StatusBadRequest, utils.BadFormat)
+			return
+		}
+	}
+	if makeChatRequest.Avatar != nil {
+		makeChatRequest.Avatar.Filename = message.Avatar[27:]
+		if err = request.SaveUploadedFile(makeChatRequest.Avatar, "assets/uploads/groupAvatar/"+makeChatRequest.Avatar.Filename); err != nil {
+			request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
+			return
+		}
+	}
 	if err != nil {
 		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
 		return
 	}
+	websocketHandler.Manager.Broadcast <- message
 	request.JSON(http.StatusCreated, nil)
 	return
 }
