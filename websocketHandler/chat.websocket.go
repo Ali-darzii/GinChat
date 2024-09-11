@@ -54,6 +54,7 @@ func (manager *ClientManager) Start() {
 			var jsonMessage []byte
 
 			switch message.Type {
+			// because u need a send message to create a pv_message --> pv_message and new_pv_message are same
 			case "pv_message", "new_pv_message":
 				privateMessage := entity.PrivateMessageRoom{
 					Sender:    message.Sender,
