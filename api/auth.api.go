@@ -121,7 +121,12 @@ func (a authAPI) ProfileUpdate(request *gin.Context) {
 			request.JSON(http.StatusBadRequest, utils.UserNameIsTaken)
 			return
 		}
+		if err.Error() == "bad_format" {
+			request.JSON(http.StatusBadRequest, utils.BadFormat)
+			return
+		}
 		request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
+		return
 	}
 	if profileUpdateRequest.Avatar != nil {
 		profileUpdateRequest.Avatar.Filename = updatedProfile.Avatar[26:]
