@@ -50,9 +50,9 @@ var (
 // @Tags chat
 // @Accept  json
 // @Produce  json
-// @Param   message  body  MessageRequest  true  "Message body"
-// @Success 200 {object} MessageResponse
-// @Failure 400 {object} ErrorResponse
+// sss@Param   message  body  MessageRequest  true  "Message body"
+// sss@Success 200 {object} MessageResponse
+// sss@Failure 400 {object} ErrorResponse
 // @Router /chat/send [post]
 func (c chatAPI) ChatWs(request *gin.Context) {
 	webSocket, err := upgrader.Upgrade(request.Writer, request.Request, nil)
@@ -135,8 +135,6 @@ func (c chatAPI) MakePvChat(request *gin.Context) {
 	return
 
 }
-
-// todo: test makeGroupChat
 func (c chatAPI) MakeGroupChat(request *gin.Context) {
 	phoneNo, ok := request.Get("phoneNo")
 	if !ok {

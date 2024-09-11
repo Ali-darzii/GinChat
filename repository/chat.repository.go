@@ -143,8 +143,6 @@ func (c chatRepository) GetAllRooms(userId uint) ([]serializer.Room, error) {
 
 	return allRooms, nil
 }
-
-// todo: get test websocketHandler.Manager.Broadcast <- message in pv and gp
 func (c chatRepository) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest, userId uint) (serializer.Message, error) {
 	var message serializer.Message
 	privateRoom := entity.PrivateRoom{

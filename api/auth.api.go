@@ -56,10 +56,10 @@ func (a authAPI) Register(request *gin.Context) {
 // @Tags auth
 // @Accept  json
 // @Produce  json
-// @Param   login  body  LoginRequest  true  "Login details"
-// @Success 200 {object} JWTResponse
-// @Failure 401 {object} ErrorResponse
-// @Router /auth/login [post]
+// @Param   login  body  serializer.LoginRequest  true  "Login details"
+// @Success 200 {object} serializer.Token
+// @Failure 400 {object} utils.ErrorResponse "Object_Not_Found(6) | Token_Expired_Or_Invalid(2) | Name_Field_Required_For_Register(12) | We_Don't_Know_What_Happened(8) | MUST_NOT_AUTHENTICATED(1)"
+// @Router /auth/ [put]
 func (a authAPI) Login(request *gin.Context) {
 	var loginRequest serializer.LoginRequest
 
@@ -74,14 +74,11 @@ func (a authAPI) Login(request *gin.Context) {
 		case "not_found":
 			request.JSON(http.StatusBadRequest, utils.ObjectNotFound)
 			return
-		case "expired_time":
-			request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
-			return
-		case "invalid_token":
+		case "expired_time", "invalid_token":
 			request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
 			return
 		case "name_field_required":
-			request.JSON(http.StatusBadRequest, gin.H{"error": "name field for the first login is required", "status": false})
+			request.JSON(http.StatusBadRequest, utils.NameFieldRequired)
 			return
 		default:
 			request.JSON(http.StatusBadRequest, err.Error())

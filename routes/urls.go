@@ -87,6 +87,8 @@ func Urls() *gin.Engine {
 			chat.POST("make-private/", chatAPI.MakePvChat)
 			chat.POST("make-group/", chatAPI.MakeGroupChat)
 		}
+		//todo:need test
+		//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}
 

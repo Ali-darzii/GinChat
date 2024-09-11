@@ -1,0 +1,89 @@
+basePath: /api/v1
+definitions:
+  serializer.LoginRequest:
+    properties:
+      name:
+        type: string
+      phone_no:
+        type: string
+      token:
+        type: integer
+    required:
+    - phone_no
+    - token
+    type: object
+  serializer.Token:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  utils.ErrorResponse:
+    properties:
+      detail:
+        type: string
+      error_code:
+        type: integer
+      status:
+        type: boolean
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /auth/:
+    put:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns a JWT token
+      parameters:
+      - description: Login details
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/serializer.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializer.Token'
+        "400":
+          description: Object_Not_Found(6) | Token_Expired_Or_Invalid(2) | Name_Field_Required_For_Register(12)
+            | We_Don't_Know_What_Happened(8) | MUST_NOT_AUTHENTICATED(1)
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Login User
+      tags:
+      - auth
+  /chat/send:
+    post:
+      consumes:
+      - application/json
+      description: Sends a chat message to a specific user
+      produces:
+      - application/json
+      responses: {}
+      summary: Send Chat Message
+      tags:
+      - chat
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
