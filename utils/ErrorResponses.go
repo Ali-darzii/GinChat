@@ -67,4 +67,9 @@ var (
 		ErrorCode: 11,
 		Detail:    "User_Name_Is_Taken",
 	}
+	NameFieldRequired = ErrorResponse{
+		Status:    false,
+		ErrorCode: 12,
+		Detail:    "Name_Field_Required_For_Register",
+	}
 )
