@@ -26,7 +26,7 @@ func NewAuthAPI(service service.AuthService) AuthAPI {
 
 // @Summary send token
 // @Description 1 min for every request, not authenticated, and returns a JWT token
-// @Tags Send Token
+// @Tags Authenticate
 // @Accept  json
 // @Produce  json
 // @Param   Register  body  serializer.RegisterRequest  true  "Register details"
@@ -61,7 +61,7 @@ func (a authAPI) Register(request *gin.Context) {
 
 // @Summary check token
 // @Description Authenticates a user and returns a JWT token
-// @Tags Check Token and Authentication
+// @Tags Authenticate
 // @Accept  json
 // @Produce  json
 // @Param   login  body  serializer.LoginRequest  true  "Login details"

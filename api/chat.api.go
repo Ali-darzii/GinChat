@@ -44,15 +44,16 @@ var (
 )
 
 // *only this ChatWs don't use api service repo structure
-// @Summary Send Chat Message
-// @Description Sends a chat message to a specific user
+// @Summary connect to websocket and send message
+// @Description Sends a chat message to a specific user or group
+// @Description type is either pv_message or group_message
 // @Tags chat
 // @Accept  json
 // @Produce  json
-// sss@Param   message  body  MessageRequest  true  "Message body"
-// sss@Success 200 {object} MessageResponse
-// sss@Failure 400 {object} ErrorResponse
-// @Router /chat/send [post]
+// @Param   message  body  utils.DummyMessage  true  "Message body"
+// @Success 200 {object}   serializer.SendPvMessage
+// @Failure 500
+// @Router /chat/ws [post]
 func (c chatAPI) ChatWs(request *gin.Context) {
 	webSocket, err := upgrader.Upgrade(request.Writer, request.Request, nil)
 	phoneNo, exist := request.Get("phoneNo")

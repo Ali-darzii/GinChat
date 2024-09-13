@@ -21,12 +21,39 @@ definitions:
     required:
     - phone_no
     type: object
+  serializer.SendPvMessage:
+    properties:
+      content:
+        type: string
+      room_id:
+        type: integer
+      sender:
+        type: integer
+      type:
+        type: string
+    required:
+    - content
+    - room_id
+    type: object
   serializer.Token:
     properties:
       access_token:
         type: string
       refresh_token:
         type: string
+    type: object
+  utils.DummyMessage:
+    properties:
+      content:
+        type: string
+      room_id:
+        type: integer
+      type:
+        type: string
+    required:
+    - content
+    - room_id
+    - type
     type: object
   utils.ErrorResponse:
     properties:
@@ -86,7 +113,7 @@ paths:
             $ref: '#/definitions/utils.ErrorResponse'
       summary: send token
       tags:
-      - Authentication
+      - Authenticate
     put:
       consumes:
       - application/json
@@ -112,16 +139,31 @@ paths:
             $ref: '#/definitions/utils.ErrorResponse'
       summary: check token
       tags:
-      - Authentication
-  /chat/send:
+      - Authenticate
+  /chat/ws:
     post:
       consumes:
       - application/json
-      description: Sends a chat message to a specific user
+      description: |-
+        Sends a chat message to a specific user or group
+        type is either pv_message or group_message
+      parameters:
+      - description: Message body
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/utils.DummyMessage'
       produces:
       - application/json
-      responses: {}
-      summary: Send Chat Message
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializer.SendPvMessage'
+        "500":
+          description: Internal Server Error
+      summary: connect to websocket and send message
       tags:
       - chat
 securityDefinitions:

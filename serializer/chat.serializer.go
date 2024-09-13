@@ -12,7 +12,7 @@ type ServerMessage struct {
 }
 
 type Message struct {
-	Type       string `json:"type"`
+	Type       string `json:"type" binding:"required"`
 	Avatar     string `json:"avatar"`
 	RoomID     uint   `json:"room_id" binding:"required"`
 	Content    string `json:"content,omitempty" binding:"required"`

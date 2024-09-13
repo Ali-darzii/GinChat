@@ -30,7 +30,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Authentication"
+                    "Authenticate"
                 ],
                 "summary": "check token",
                 "parameters": [
@@ -68,7 +68,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Authentication"
+                    "Authenticate"
                 ],
                 "summary": "send token",
                 "parameters": [
@@ -104,9 +104,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/chat/send": {
+        "/chat/ws": {
             "post": {
-                "description": "Sends a chat message to a specific user",
+                "description": "Sends a chat message to a specific user or group\ntype is either pv_message or group_message",
                 "consumes": [
                     "application/json"
                 ],
@@ -116,8 +116,29 @@ const docTemplate = `{
                 "tags": [
                     "chat"
                 ],
-                "summary": "Send Chat Message",
-                "responses": {}
+                "summary": "connect to websocket and send message",
+                "parameters": [
+                    {
+                        "description": "Message body",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/utils.DummyMessage"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/serializer.SendPvMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
             }
         }
     },
@@ -153,6 +174,27 @@ const docTemplate = `{
                 }
             }
         },
+        "serializer.SendPvMessage": {
+            "type": "object",
+            "required": [
+                "content",
+                "room_id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "sender": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "serializer.Token": {
             "type": "object",
             "properties": {
@@ -160,6 +202,25 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.DummyMessage": {
+            "type": "object",
+            "required": [
+                "content",
+                "room_id",
+                "type"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "type": {
                     "type": "string"
                 }
             }

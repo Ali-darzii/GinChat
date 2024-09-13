@@ -15,6 +15,44 @@
     "basePath": "/api/v1",
     "paths": {
         "/auth/": {
+            "put": {
+                "description": "Authenticates a user and returns a JWT token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authenticate"
+                ],
+                "summary": "check token",
+                "parameters": [
+                    {
+                        "description": "Login details",
+                        "name": "login",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/serializer.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/serializer.Token"
+                        }
+                    },
+                    "400": {
+                        "description": "Object_Not_Found(6) | Token_Expired_Or_Invalid(2) | Name_Field_Required_For_Register(12) | We_Don't_Know_What_Happened(8) | MUST_NOT_AUTHENTICATED(1)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "1 min for every request, not authenticated, and returns a JWT token",
                 "consumes": [
@@ -24,7 +62,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Authentication"
+                    "Authenticate"
                 ],
                 "summary": "send token",
                 "parameters": [
@@ -58,50 +96,11 @@
                         }
                     }
                 }
-            },
-            "put": {
-                "description": "Authenticates a user and returns a JWT token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "check token",
-                "parameters": [
-                    {
-                        "description": "Login details",
-                        "name": "login",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/serializer.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/serializer.Token"
-                        }
-                    },
-                    "400": {
-                        "description": "Object_Not_Found(6) | Token_Expired_Or_Invalid(2) | Name_Field_Required_For_Register(12) | We_Don't_Know_What_Happened(8) | MUST_NOT_AUTHENTICATED(1)",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
             }
-
         },
-        "/chat/send": {
+        "/chat/ws": {
             "post": {
-                "description": "Sends a chat message to a specific user",
+                "description": "Sends a chat message to a specific user or group\ntype is either pv_message or group_message",
                 "consumes": [
                     "application/json"
                 ],
@@ -111,8 +110,29 @@
                 "tags": [
                     "chat"
                 ],
-                "summary": "Send Chat Message",
-                "responses": {}
+                "summary": "connect to websocket and send message",
+                "parameters": [
+                    {
+                        "description": "Message body",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/utils.DummyMessage"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/serializer.SendPvMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
             }
         }
     },
@@ -148,6 +168,27 @@
                 }
             }
         },
+        "serializer.SendPvMessage": {
+            "type": "object",
+            "required": [
+                "content",
+                "room_id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "sender": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "serializer.Token": {
             "type": "object",
             "properties": {
@@ -155,6 +196,25 @@
                     "type": "string"
                 },
                 "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.DummyMessage": {
+            "type": "object",
+            "required": [
+                "content",
+                "room_id",
+                "type"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "type": {
                     "type": "string"
                 }
             }

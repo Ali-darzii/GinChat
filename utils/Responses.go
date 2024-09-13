@@ -6,10 +6,15 @@ type ErrorResponse struct {
 	Detail    string `json:"detail"`
 }
 
-// in struct for documentation
+// these structs are only for documentation
 type RegisterResponse struct {
 	Detail   string
 	IsSignup bool
+}
+type DummyMessage struct {
+	Type    string `json:"type" binding:"required"`
+	RoomID  uint   `json:"room_id" binding:"required"`
+	Content string `json:"content,omitempty" binding:"required"`
 }
 
 var (
