@@ -3,6 +3,7 @@ package routes
 import (
 	"GinChat/api"
 	"GinChat/db"
+	_ "GinChat/docs"
 	"GinChat/middleware"
 	"GinChat/pkg/JWT"
 	"GinChat/repository"
@@ -13,6 +14,8 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/go-redis/redis/v8"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 )
 
@@ -63,7 +66,8 @@ func Urls() *gin.Engine {
 
 	}
 	go websocketHandler.Manager.Start()
-
+	//todo:need test
+	// Serve Swagger documentation
 	apiV1 := router.Group("api/v1")
 	{
 		//Authentication API
@@ -87,10 +91,9 @@ func Urls() *gin.Engine {
 			chat.POST("make-private/", chatAPI.MakePvChat)
 			chat.POST("make-group/", chatAPI.MakeGroupChat)
 		}
-		//todo:need test
-		//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return router
 
