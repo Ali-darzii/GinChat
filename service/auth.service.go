@@ -14,7 +14,6 @@ import (
 type AuthService interface {
 	Register(serializer.RegisterRequest) (bool, error)
 	Login(serializer.LoginRequest) (entity.User, error)
-	ProfileUpdate(serializer.ProfileUpdateRequest) (serializer.UpdatedProfile, error)
 }
 
 type authService struct {
@@ -96,29 +95,4 @@ func (a authService) Login(loginRequest serializer.LoginRequest) (entity.User, e
 	}
 
 	return user, nil
-}
-func (a authService) ProfileUpdate(profile serializer.ProfileUpdateRequest) (serializer.UpdatedProfile, error) {
-	// unique image name check
-	var imagePath string
-	if profile.Avatar != nil {
-		if ok := utils.ImageValidate(profile.Avatar); !ok {
-			return serializer.UpdatedProfile{}, errors.New("bad_format")
-		}
-		imagePath = "assets/uploads/userAvatar/"
-		imagePath = utils.ImageController(imagePath, profile.Avatar.Filename)
-	}
-
-	user := entity.User{
-		ID:       profile.ID,
-		Name:     &profile.Name,
-		Username: &profile.Username,
-		Avatar:   &imagePath,
-	}
-
-	updatedProfile, err := a.authRepository.ProfileUpdate(user)
-	if err != nil {
-		return serializer.UpdatedProfile{}, err
-	}
-	return updatedProfile, nil
-
 }

@@ -9,15 +9,11 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
         "contact": {
-            "name": "API Support",
-            "url": "http://www.swagger.io/support",
-            "email": "support@swagger.io"
+            "name": "API Support"
         },
         "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+            "name": "Apache 2.0"
         },
         "version": "{{.Version}}"
     },
@@ -34,9 +30,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "Authentication"
                 ],
-                "summary": "Login User",
+                "summary": "check token",
                 "parameters": [
                     {
                         "description": "Login details",
@@ -57,6 +53,50 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Object_Not_Found(6) | Token_Expired_Or_Invalid(2) | Name_Field_Required_For_Register(12) | We_Don't_Know_What_Happened(8) | MUST_NOT_AUTHENTICATED(1)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "1 min for every request, not authenticated, and returns a JWT token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "send token",
+                "parameters": [
+                    {
+                        "description": "Register details",
+                        "name": "Register",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/serializer.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.RegisterResponse"
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/utils.RegisterResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Too_Many_Token_Request(7) | Token_Expired_Or_Invalid(2) | We_Don't_Know_What_Happened(8) | MUST_NOT_AUTHENTICATED(1)",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
@@ -100,6 +140,19 @@ const docTemplate = `{
                 }
             }
         },
+        "serializer.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "phone_no"
+            ],
+            "properties": {
+                "phone_no": {
+                    "type": "string",
+                    "maxLength": 11,
+                    "minLength": 11
+                }
+            }
+        },
         "serializer.Token": {
             "type": "object",
             "properties": {
@@ -124,16 +177,26 @@ const docTemplate = `{
                     "type": "boolean"
                 }
             }
+        },
+        "utils.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "string"
+                },
+                "isSignup": {
+                    "type": "boolean"
+                }
+            }
         }
     },
     "securityDefinitions": {
-        "BasicAuth": {
+        "Json Web Token (jwt)": {
             "type": "basic"
         }
     },
     "externalDocs": {
-        "description": "OpenAPI",
-        "url": "https://swagger.io/resources/open-api/"
+        "description": "OpenAPI"
     }
 }`
 
@@ -144,7 +207,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Swagger Example API",
-	Description:      "This is a sample server celler server.",
+	Description:      "This is a Gin chat documentation",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

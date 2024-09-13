@@ -6,6 +6,12 @@ type ErrorResponse struct {
 	Detail    string `json:"detail"`
 }
 
+// in struct for documentation
+type RegisterResponse struct {
+	Detail   string
+	IsSignup bool
+}
+
 var (
 	MustNotAuthenticated = ErrorResponse{
 		Status:    false,

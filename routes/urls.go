@@ -29,13 +29,18 @@ var (
 	authService    service.AuthService       = service.NewAuthService(authRepository)
 	authAPI        api.AuthAPI               = api.NewAuthAPI(authService)
 
-	//jwt
-	jwtAuth JWT.Jwt
-
 	//chat
 	chatRepository repository.ChatRepository = repository.NewChatRepository(postDb, redisDb)
 	chatService    service.ChatService       = service.NewChatService(chatRepository)
 	chatAPI        api.ChatAPI               = api.NewChatAPI(chatService)
+
+	//user
+	userRepository repository.UserRepository = repository.NewUserRepository(postDb, redisDb)
+	userService    service.UserService       = service.NewUserService(userRepository)
+	userAPI        api.UserAPI               = api.NewUserAPI(userService)
+
+	//jwt
+	jwtAuth JWT.Jwt
 )
 
 func Urls() *gin.Engine {
@@ -79,14 +84,14 @@ func Urls() *gin.Engine {
 		//user API
 		user := apiV1.Group("/user", middleware.AuthorizationJWT(jwtAuth))
 		{
-			user.PUT("/profile-update/:id/", authAPI.ProfileUpdate)
+			user.GET("get-users/", userAPI.GetAllUsers)
+			user.PUT("/profile-update/:id/", userAPI.ProfileUpdate)
 
 		}
 		//chat API
 		chat := apiV1.Group("/chat", middleware.AuthorizationJWT(jwtAuth))
 		{
 			chat.GET("/ws/", chatAPI.ChatWs)
-			chat.GET("get-users/", chatAPI.GetAllUsers)
 			chat.GET("get-rooms/", chatAPI.GetAllRooms)
 			chat.POST("make-private/", chatAPI.MakePvChat)
 			chat.POST("make-group/", chatAPI.MakeGroupChat)

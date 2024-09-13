@@ -16,7 +16,6 @@ import (
 
 type ChatAPI interface {
 	ChatWs(*gin.Context)
-	GetAllUsers(*gin.Context)
 	GetAllRooms(ctx *gin.Context)
 	MakePvChat(*gin.Context)
 	MakeGroupChat(request *gin.Context)
@@ -80,26 +79,6 @@ func (c chatAPI) ChatWs(request *gin.Context) {
 	go client.Read()
 	go client.Write()
 
-}
-func (c chatAPI) GetAllUsers(request *gin.Context) {
-	var paginationRequest serializer.PaginationRequest
-	if err := request.ShouldBindQuery(&paginationRequest); err != nil {
-		request.JSON(http.StatusBadRequest, utils.BadFormat)
-		return
-	}
-	userPhoneNo, ok := request.Get("phoneNo")
-	if !ok {
-		request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
-		return
-	}
-	apiUserPagination, err := c.service.GetAllUsers(paginationRequest, userPhoneNo.(string))
-	if err != nil {
-		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
-		return
-	}
-
-	request.JSON(http.StatusOK, apiUserPagination)
-	return
 }
 func (c chatAPI) GetAllRooms(request *gin.Context) {
 	userPhoneNo, ok := request.Get("phoneNo")

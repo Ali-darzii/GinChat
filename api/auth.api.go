@@ -6,15 +6,12 @@ import (
 	"GinChat/service"
 	"GinChat/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"net/http"
-	"strconv"
 )
 
 type AuthAPI interface {
 	Register(*gin.Context)
 	Login(*gin.Context)
-	ProfileUpdate(request *gin.Context)
 }
 
 type authAPI struct {
@@ -26,6 +23,17 @@ func NewAuthAPI(service service.AuthService) AuthAPI {
 		service: service,
 	}
 }
+
+// @Summary send token
+// @Description 1 min for every request, not authenticated, and returns a JWT token
+// @Tags Send Token
+// @Accept  json
+// @Produce  json
+// @Param   Register  body  serializer.RegisterRequest  true  "Register details"
+// @Success 201 {object} utils.RegisterResponse
+// @Success 200 {object} utils.RegisterResponse
+// @Failure 400 {object} utils.ErrorResponse "Too_Many_Token_Request(7) | Token_Expired_Or_Invalid(2) | We_Don't_Know_What_Happened(8) | MUST_NOT_AUTHENTICATED(1)"
+// @Router /auth/ [post]
 func (a authAPI) Register(request *gin.Context) {
 	/*  send phone msg with db data creation  */
 	var registerRequest serializer.RegisterRequest
@@ -44,16 +52,16 @@ func (a authAPI) Register(request *gin.Context) {
 		return
 	}
 	if isSignup {
-		request.JSON(http.StatusCreated, gin.H{"data": "sent", "is_signup": isSignup})
+		request.JSON(http.StatusCreated, utils.RegisterResponse{Detail: "sent", IsSignup: isSignup})
 		return
 	}
-	request.JSON(http.StatusOK, gin.H{"data": "sent", "is_signup": isSignup})
+	request.JSON(http.StatusOK, utils.RegisterResponse{Detail: "sent", IsSignup: isSignup})
 	return
 }
 
-// @Summary Login User
+// @Summary check token
 // @Description Authenticates a user and returns a JWT token
-// @Tags auth
+// @Tags Check Token and Authentication
 // @Accept  json
 // @Produce  json
 // @Param   login  body  serializer.LoginRequest  true  "Login details"
@@ -106,42 +114,5 @@ func (a authAPI) Login(request *gin.Context) {
 		return
 	}
 	request.JSON(http.StatusOK, token)
-	return
-}
-func (a authAPI) ProfileUpdate(request *gin.Context) {
-	var profileUpdateRequest serializer.ProfileUpdateRequest
-	if err := request.ShouldBindWith(&profileUpdateRequest, binding.FormMultipart); err != nil {
-		request.JSON(http.StatusBadRequest, utils.BadFormat)
-		return
-	}
-	id, err := strconv.ParseInt(request.Param("id"), 10, 32)
-	if err != nil {
-		request.JSON(http.StatusBadRequest, utils.BadFormat)
-		return
-	}
-	profileUpdateRequest.ID = uint(id)
-
-	updatedProfile, err := a.service.ProfileUpdate(profileUpdateRequest)
-	if err != nil {
-		if err.Error() == "username_taken" {
-			request.JSON(http.StatusBadRequest, utils.UserNameIsTaken)
-			return
-		}
-		if err.Error() == "bad_format" {
-			request.JSON(http.StatusBadRequest, utils.BadFormat)
-			return
-		}
-		request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
-		return
-	}
-	if profileUpdateRequest.Avatar != nil {
-		profileUpdateRequest.Avatar.Filename = updatedProfile.Avatar[26:]
-		if err = request.SaveUploadedFile(profileUpdateRequest.Avatar, "assets/uploads/userAvatar/"+profileUpdateRequest.Avatar.Filename); err != nil {
-			request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
-			return
-		}
-	}
-
-	request.JSON(http.StatusOK, updatedProfile)
 	return
 }

@@ -2,11 +2,9 @@ package repository
 
 import (
 	"GinChat/entity"
-	"GinChat/serializer"
 	"errors"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
-	"os"
 )
 
 type AuthRepository interface {
@@ -14,7 +12,6 @@ type AuthRepository interface {
 	PhoneSave(entity.Phone) error
 	FindByPhone(string) (entity.User, error)
 	NewUserSave(user entity.User) error
-	ProfileUpdate(entity.User) (serializer.UpdatedProfile, error)
 }
 
 type authRepository struct {
@@ -63,26 +60,4 @@ func (a authRepository) FindByPhone(phoneNo string) (entity.User, error) {
 	}
 	user.Phone = phone
 	return user, nil
-}
-func (a authRepository) ProfileUpdate(user entity.User) (serializer.UpdatedProfile, error) {
-	//unique username check completely
-	var userUsernameCheck entity.User
-	if res := a.postgresConn.Where("username = ? AND id != ?", user.Username, user.ID).Take(&userUsernameCheck); res.Error == nil {
-		return serializer.UpdatedProfile{}, errors.New("username_taken")
-	}
-	// remove old avatar if exist
-	var userImageRemove entity.User
-	if res := a.postgresConn.Where("id = ?", user.ID).Take(&userImageRemove); res.Error != nil {
-		return serializer.UpdatedProfile{}, res.Error
-	}
-	if *userImageRemove.Avatar != "" {
-		os.Remove(*userImageRemove.Avatar)
-	}
-
-	var updatedProfile serializer.UpdatedProfile
-	res := a.postgresConn.Save(&user).Find(&updatedProfile)
-	if res.Error != nil {
-		return serializer.UpdatedProfile{}, res.Error
-	}
-	return updatedProfile, nil
 }
