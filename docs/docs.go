@@ -13,7 +13,7 @@ const docTemplate = `{
             "name": "API Support"
         },
         "license": {
-            "name": "Apache 2.0"
+            "name": "ali.darzi.1354@gmail.com"
         },
         "version": "{{.Version}}"
     },
@@ -104,9 +104,159 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/get-rooms": {
+            "get": {
+                "description": "get all pv and gp chats that user have \u0026 need authentication\navatar --\u003e if it's gp will be gp's avatar and if it's pv it will be user in chat avatar",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "get all chat rooms",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/serializer.Room"
+                        }
+                    },
+                    "400": {
+                        "description": "Token_Expired_Or_Invalid(2) | Object_Not_Found(6)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/chat/get-users/": {
+            "get": {
+                "description": "get all users\nif their have a room in pv chat it will come with it\nthis url need get-users?offset=0\u0026limit=0",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "get all users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/serializer.APIUserPagination"
+                        }
+                    },
+                    "400": {
+                        "description": "Token_Expired_Or_Invalid(2) | Bad_Format(5)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "We_Don't_Know_What_Happened(8)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/make-group": {
+            "post": {
+                "description": "create group chat\nsend data in form-data\nall users of group will receive data of created group by websocket (same as creator)\nso on success creator wil receive nil",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "make gp chat",
+                "parameters": [
+                    {
+                        "description": "Message body",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/utils.DummyMakeGroupChat"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "We_Don't_Know_What_Happened(8)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/make-private": {
+            "post": {
+                "description": "create private chat\nyou need to send 1 message too to create private chat\nit has",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "make pv chat",
+                "parameters": [
+                    {
+                        "description": "Message body",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/serializer.MakeNewChatRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "you're recipient going to receive the response from ws !",
+                        "schema": {
+                            "$ref": "#/definitions/serializer.SendPvMessage"
+                        }
+                    },
+                    "400": {
+                        "description": "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5) | We_Don't_Know_What_Happened(8)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/ws": {
             "post": {
-                "description": "Sends a chat message to a specific user or group\ntype is either pv_message or group_message",
+                "description": "Sends a chat message to a specific user or group\nit's websocket connection not http post method (swagger doesn't support ws documentation)\ntype is either pv_message or group_message",
                 "consumes": [
                     "application/json"
                 ],
@@ -140,9 +290,75 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user/profile-update/:id/": {
+            "get": {
+                "description": "send this in form-data\nit has",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "update user profile",
+                "parameters": [
+                    {
+                        "description": "Message body",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/utils.DummyProfileUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/serializer.UpdatedProfile"
+                        }
+                    },
+                    "400": {
+                        "description": "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5) | User_Name_Is_Taken(11)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "We_Don't_Know_What_Happened(8)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "serializer.APIUserPagination": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/serializer.UserInRoom"
+                    }
+                }
+            }
+        },
         "serializer.LoginRequest": {
             "type": "object",
             "required": [
@@ -161,6 +377,22 @@ const docTemplate = `{
                 }
             }
         },
+        "serializer.MakeNewChatRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "recipient_id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "recipient_id": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
         "serializer.RegisterRequest": {
             "type": "object",
             "required": [
@@ -171,6 +403,32 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 11,
                     "minLength": 11
+                }
+            }
+        },
+        "serializer.Room": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "room_type": {
+                    "type": "string"
+                },
+                "time_stamp": {
+                    "type": "string"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/serializer.UserAPI"
+                    }
                 }
             }
         },
@@ -206,6 +464,81 @@ const docTemplate = `{
                 }
             }
         },
+        "serializer.UpdatedProfile": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "serializer.UserAPI": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "serializer.UserInRoom": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "time_stamp": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.DummyMakeGroupChat": {
+            "type": "object",
+            "required": [
+                "name",
+                "recipients_id"
+            ],
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "recipients_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "utils.DummyMessage": {
             "type": "object",
             "required": [
@@ -221,6 +554,26 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.DummyProfileUpdate": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -268,7 +621,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Swagger Example API",
-	Description:      "This is a Gin chat documentation",
+	Description:      "This is a Gin chat documentation\nBase URL is in top\nWe_Don't_Know_What_Happened error usually is db error(access issue)",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

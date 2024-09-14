@@ -16,6 +16,17 @@ type DummyMessage struct {
 	RoomID  uint   `json:"room_id" binding:"required"`
 	Content string `json:"content,omitempty" binding:"required"`
 }
+type DummyMakeGroupChat struct {
+	Avatar     string `json:"avatar"`
+	Name       string `binding:"required" json:"name"`
+	Recipients []uint `binding:"required" json:"recipients_id"`
+}
+type DummyProfileUpdate struct {
+	ID       uint   `json:"id" form:"id"`
+	Avatar   string `json:"avatar" form:"avatar"`
+	Name     string `binding:"required,name_validator" json:"name" form:"name"`
+	Username string `json:"username" form:"username"`
+}
 
 var (
 	MustNotAuthenticated = ErrorResponse{

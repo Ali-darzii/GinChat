@@ -1,5 +1,18 @@
 basePath: /api/v1
 definitions:
+  serializer.APIUserPagination:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/serializer.UserInRoom'
+        type: array
+    type: object
   serializer.LoginRequest:
     properties:
       name:
@@ -12,6 +25,17 @@ definitions:
     - phone_no
     - token
     type: object
+  serializer.MakeNewChatRequest:
+    properties:
+      content:
+        type: string
+      recipient_id:
+        minimum: 1
+        type: integer
+    required:
+    - content
+    - recipient_id
+    type: object
   serializer.RegisterRequest:
     properties:
       phone_no:
@@ -20,6 +44,23 @@ definitions:
         type: string
     required:
     - phone_no
+    type: object
+  serializer.Room:
+    properties:
+      avatar:
+        type: string
+      name:
+        type: string
+      room_id:
+        type: integer
+      room_type:
+        type: string
+      time_stamp:
+        type: string
+      users:
+        items:
+          $ref: '#/definitions/serializer.UserAPI'
+        type: array
     type: object
   serializer.SendPvMessage:
     properties:
@@ -42,6 +83,55 @@ definitions:
       refresh_token:
         type: string
     type: object
+  serializer.UpdatedProfile:
+    properties:
+      avatar:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  serializer.UserAPI:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  serializer.UserInRoom:
+    properties:
+      avatar:
+        type: string
+      name:
+        type: string
+      room_id:
+        type: integer
+      time_stamp:
+        type: string
+      user_id:
+        type: integer
+      username:
+        type: string
+    type: object
+  utils.DummyMakeGroupChat:
+    properties:
+      avatar:
+        type: string
+      name:
+        type: string
+      recipients_id:
+        items:
+          type: integer
+        type: array
+    required:
+    - name
+    - recipients_id
+    type: object
   utils.DummyMessage:
     properties:
       content:
@@ -54,6 +144,19 @@ definitions:
     - content
     - room_id
     - type
+    type: object
+  utils.DummyProfileUpdate:
+    properties:
+      avatar:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      username:
+        type: string
+    required:
+    - name
     type: object
   utils.ErrorResponse:
     properties:
@@ -77,9 +180,12 @@ host: localhost:8080
 info:
   contact:
     name: API Support
-  description: This is a Gin chat documentation
+  description: |-
+    This is a Gin chat documentation
+    Base URL is in top
+    We_Don't_Know_What_Happened error usually is db error(access issue)
   license:
-    name: Apache 2.0
+    name: ali.darzi.1354@gmail.com
   title: Swagger Example API
   version: "1.0"
 paths:
@@ -140,12 +246,124 @@ paths:
       summary: check token
       tags:
       - Authenticate
+  /chat/get-rooms:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        get all pv and gp chats that user have & need authentication
+        avatar --> if it's gp will be gp's avatar and if it's pv it will be user in chat avatar
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializer.Room'
+        "400":
+          description: Token_Expired_Or_Invalid(2) | Object_Not_Found(6)
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+      summary: get all chat rooms
+      tags:
+      - chat
+  /chat/get-users/:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        get all users
+        if their have a room in pv chat it will come with it
+        this url need get-users?offset=0&limit=0
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializer.APIUserPagination'
+        "400":
+          description: Token_Expired_Or_Invalid(2) | Bad_Format(5)
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: We_Don't_Know_What_Happened(8)
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: get all users
+      tags:
+      - user
+  /chat/make-group:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        create group chat
+        send data in form-data
+        all users of group will receive data of created group by websocket (same as creator)
+        so on success creator wil receive nil
+      parameters:
+      - description: Message body
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/utils.DummyMakeGroupChat'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: We_Don't_Know_What_Happened(8)
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: make gp chat
+      tags:
+      - chat
+  /chat/make-private:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        create private chat
+        you need to send 1 message too to create private chat
+        it has
+      parameters:
+      - description: Message body
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/serializer.MakeNewChatRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: you're recipient going to receive the response from ws !
+          schema:
+            $ref: '#/definitions/serializer.SendPvMessage'
+        "400":
+          description: Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)
+            | We_Don't_Know_What_Happened(8)
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: make pv chat
+      tags:
+      - chat
   /chat/ws:
     post:
       consumes:
       - application/json
       description: |-
         Sends a chat message to a specific user or group
+        it's websocket connection not http post method (swagger doesn't support ws documentation)
         type is either pv_message or group_message
       parameters:
       - description: Message body
@@ -166,6 +384,39 @@ paths:
       summary: connect to websocket and send message
       tags:
       - chat
+  /user/profile-update/:id/:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        send this in form-data
+        it has
+      parameters:
+      - description: Message body
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/utils.DummyProfileUpdate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/serializer.UpdatedProfile'
+        "400":
+          description: Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)
+            | User_Name_Is_Taken(11)
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: We_Don't_Know_What_Happened(8)
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: update user profile
+      tags:
+      - user
 securityDefinitions:
   Json Web Token (jwt):
     type: basic

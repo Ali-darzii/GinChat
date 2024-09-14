@@ -7,10 +7,11 @@ import (
 // @title           Swagger Example API
 // @version         1.0
 // @description     This is a Gin chat documentation
+// @description     Base URL is in top
+// @description     We_Don't_Know_What_Happened error usually is db error(access issue)
+// @contact.name    API Support
 
-// @contact.name   API Support
-
-// @license.name  Apache 2.0
+// @license.name  ali.darzi.1354@gmail.com
 
 // @host      localhost:8080
 // @BasePath  /api/v1

@@ -24,6 +24,17 @@ func NewUserAPI(service service.UserService) UserAPI {
 	}
 }
 
+// @Summary get all users
+// @Description get all users
+// @Description if their have a room in pv chat it will come with it
+// @Description this url need get-users?offset=0&limit=0
+// @Tags user
+// @Accept  json
+// @Produce  json
+// @Success 200 {object}   serializer.APIUserPagination
+// @Failure 400 {object}   utils.ErrorResponse "Token_Expired_Or_Invalid(2) | Bad_Format(5)"
+// @Failure 500 {object}   utils.ErrorResponse "We_Don't_Know_What_Happened(8)"
+// @Router /chat/get-users/ [get]
 func (u userAPI) GetAllUsers(request *gin.Context) {
 	var paginationRequest serializer.PaginationRequest
 	if err := request.ShouldBindQuery(&paginationRequest); err != nil {
@@ -44,6 +55,18 @@ func (u userAPI) GetAllUsers(request *gin.Context) {
 	request.JSON(http.StatusOK, apiUserPagination)
 	return
 }
+
+// @Summary update user profile
+// @Description send this in form-data
+// @Description it has
+// @Tags user
+// @Accept  json
+// @Produce  json
+// @Param   message  body  utils.DummyProfileUpdate  true  "Message body"
+// @Success 201 {object}   serializer.UpdatedProfile
+// @Failure 400 {object}   utils.ErrorResponse "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5) | User_Name_Is_Taken(11)"
+// @Failure 500 {object}   utils.ErrorResponse "We_Don't_Know_What_Happened(8)"
+// @Router /user/profile-update/:id/ [get]
 func (u userAPI) ProfileUpdate(request *gin.Context) {
 	var profileUpdateRequest serializer.ProfileUpdateRequest
 	if err := request.ShouldBindWith(&profileUpdateRequest, binding.FormMultipart); err != nil {

@@ -46,6 +46,7 @@ var (
 // *only this ChatWs don't use api service repo structure
 // @Summary connect to websocket and send message
 // @Description Sends a chat message to a specific user or group
+// @Description it's websocket connection not http post method (swagger doesn't support ws documentation)
 // @Description type is either pv_message or group_message
 // @Tags chat
 // @Accept  json
@@ -81,6 +82,17 @@ func (c chatAPI) ChatWs(request *gin.Context) {
 	go client.Write()
 
 }
+
+// @Summary get all chat rooms
+// @Description get all pv and gp chats that user have & need authentication
+// @Description avatar --> if it's gp will be gp's avatar and if it's pv it will be user in chat avatar
+// @Tags chat
+// @Accept  json
+// @Produce  json
+// @Success 200 {object}   serializer.Room
+// @Failure 401
+// @Failure 400 {object} utils.ErrorResponse "Token_Expired_Or_Invalid(2) | Object_Not_Found(6)"
+// @Router /chat/get-rooms [get]
 func (c chatAPI) GetAllRooms(request *gin.Context) {
 	userPhoneNo, ok := request.Get("phoneNo")
 	if !ok {
@@ -94,6 +106,18 @@ func (c chatAPI) GetAllRooms(request *gin.Context) {
 	}
 	request.JSON(http.StatusOK, usersInSameRoom)
 }
+
+// @Summary make pv chat
+// @Description create private chat
+// @Description you need to send 1 message too to create private chat
+// @Description it has
+// @Tags chat
+// @Accept  json
+// @Produce  json
+// @Param   message  body  serializer.MakeNewChatRequest  true  "Message body"
+// @Success 201 {object}   serializer.SendPvMessage "you're recipient going to receive the response from ws !"
+// @Failure 400 {object}   utils.ErrorResponse "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5) | We_Don't_Know_What_Happened(8)"
+// @Router /chat/make-private [post]
 func (c chatAPI) MakePvChat(request *gin.Context) {
 	var makeNewChatRequest serializer.MakeNewChatRequest
 	if err := request.ShouldBind(&makeNewChatRequest); err != nil {
@@ -108,13 +132,27 @@ func (c chatAPI) MakePvChat(request *gin.Context) {
 
 	message, err := c.service.MakePvChat(makeNewChatRequest, userPhoneNo.(string))
 	if err != nil {
-		request.JSON(http.StatusInternalServerError, err)
+		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
 		return
 	}
 	request.JSON(http.StatusCreated, message)
 	return
 
 }
+
+// @Summary make gp chat
+// @Description create group chat
+// @Description send data in form-data
+// @Description all users of group will receive data of created group by websocket (same as creator)
+// @Description so on success creator wil receive nil
+// @Tags chat
+// @Accept  json
+// @Produce  json
+// @Param   message  body  utils.DummyMakeGroupChat  true  "Message body"
+// @Success 201 {object}   nil
+// @Failure 400 {object}   utils.ErrorResponse "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)"
+// @Failure 500 {object}   utils.ErrorResponse "We_Don't_Know_What_Happened(8)"
+// @Router /chat/make-group [post]
 func (c chatAPI) MakeGroupChat(request *gin.Context) {
 	phoneNo, ok := request.Get("phoneNo")
 	if !ok {
