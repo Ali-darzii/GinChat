@@ -1,12 +1,17 @@
 services:
   ginchat:
     container_name: ginchat
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["go","run","/app/main.go"]
     ports:
       - "8080:8080"
-    restart: always
+    env_file:
+      - .env
+#    restart: always
     volumes:
-      - .:/app/
+      - .:/app
     depends_on:
       - postgres
       - pgadmin
@@ -19,7 +24,7 @@ services:
     container_name: ginchat-postgres
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: your_password
+      POSTGRES_PASSWORD: admin
       POSTGRES_DB: GinChat
     ports:
       - "5432:5432"

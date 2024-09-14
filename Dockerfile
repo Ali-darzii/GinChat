@@ -1,17 +1,26 @@
-FROM golang:1.22
+# Use the official Golang Alpine image as the base image (lightweight)
+FROM golang:1.22-alpine
+
+# Install any dependencies needed (e.g., git for go modules)
+RUN apk add --no-cache git
+
+# Set the working directory to /app
 WORKDIR /app
 
-COPY go.* /app
-RUN go mod download && go mod verify
+# Copy go mod and sum files
+COPY go.mod go.sum ./
 
-COPY . /app
-RUN go build -v -o main .
+# Download all Go dependencies
+RUN go mod download
 
-FROM debian:bookworm-slim
-RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+# Copy the rest of the application code to the container
+COPY . .
 
-COPY --from=builder /app/server /app/server
+# Build the Go application
+RUN go build -o main .
 
-CMD ["/app/main"]
+# Expose port 8080 to the outside world
+EXPOSE 8080
+
+# Command to run the application
+CMD ["./main"]
