@@ -15,6 +15,7 @@ type UserRepository interface {
 	FindByPhone(string) (uint, error)
 	GetAllUsers(serializer.PaginationRequest, uint) ([]serializer.UserInRoom, int64, error)
 	ProfileUpdate(entity.User) (serializer.UpdatedProfile, error)
+	GetUserProfile(entity.User) (serializer.ProfileAPI, error)
 }
 
 type userRepository struct {
@@ -86,4 +87,13 @@ func (u userRepository) ProfileUpdate(user entity.User) (serializer.UpdatedProfi
 		return serializer.UpdatedProfile{}, res.Error
 	}
 	return updatedProfile, nil
+}
+
+func (u userRepository) GetUserProfile(user entity.User) (serializer.ProfileAPI, error) {
+	var userProfile serializer.ProfileAPI
+	if res := u.postgresConn.First(&user).Find(userProfile); res.Error != nil {
+		return userProfile, res.Error
+	}
+	return userProfile, nil
+
 }

@@ -59,25 +59,11 @@ type PaginationRequest struct {
 	Offset int `form:"offset" json:"offset"  binding:"min=0"`
 }
 
-type APIUserPagination struct {
-	Count    int64        `json:"count"`
-	Previous string       `json:"previous"`
-	Next     string       `json:"next"`
-	Results  []UserInRoom `json:"results"`
-}
 type MakeNewChatRequest struct {
 	RecipientID uint   `binding:"required,min=1" json:"recipient_id"`
 	Content     string `binding:"required" json:"content"`
 }
 
-type UserInRoom struct {
-	Avatar    string    `json:"avatar" form:"avatar"`
-	UserID    uint      `json:"user_id"`
-	Name      *string   `json:"name"`
-	Username  *string   `json:"username"`
-	RoomID    uint      `json:"room_id"`
-	TimeStamp time.Time `json:"time_stamp"`
-}
 type UserInGpRoom struct {
 	Avatar    string    `json:"avatar"`
 	UserID    uint      `json:"user_id"`

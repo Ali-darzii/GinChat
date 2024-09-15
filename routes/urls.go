@@ -84,7 +84,8 @@ func Urls() *gin.Engine {
 		//user API
 		user := apiV1.Group("/user", middleware.AuthorizationJWT(jwtAuth))
 		{
-			user.GET("get-users/", userAPI.GetAllUsers)
+			user.GET("/get-users/", userAPI.GetAllUsers)
+			user.GET("/get-profile/:id/", userAPI.GetUserProfile)
 			user.PUT("/profile-update/:id/", userAPI.ProfileUpdate)
 
 		}

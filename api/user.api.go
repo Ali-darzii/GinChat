@@ -13,6 +13,7 @@ import (
 type UserAPI interface {
 	GetAllUsers(request *gin.Context)
 	ProfileUpdate(*gin.Context)
+	GetUserProfile(*gin.Context)
 }
 type userAPI struct {
 	service service.UserService
@@ -103,4 +104,19 @@ func (u userAPI) ProfileUpdate(request *gin.Context) {
 
 	request.JSON(http.StatusOK, updatedProfile)
 	return
+}
+
+// todo:need a test !
+func (u userAPI) GetUserProfile(request *gin.Context) {
+	id, err := strconv.ParseInt(request.Param("id"), 10, 32)
+	if err != nil {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
+	}
+	userProfile, err := u.service.GetUserProfile(uint(id))
+	if err != nil {
+		request.JSON(http.StatusNotFound, utils.ObjectNotFound)
+		return
+	}
+	request.JSON(http.StatusOK, userProfile)
 }

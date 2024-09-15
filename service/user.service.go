@@ -13,6 +13,7 @@ import (
 type UserService interface {
 	GetAllUsers(serializer.PaginationRequest, string) (serializer.APIUserPagination, error)
 	ProfileUpdate(serializer.ProfileUpdateRequest) (serializer.UpdatedProfile, error)
+	GetUserProfile(uint) (serializer.ProfileAPI, error)
 }
 
 type userService struct {
@@ -86,4 +87,13 @@ func (u userService) ProfileUpdate(profile serializer.ProfileUpdateRequest) (ser
 	}
 	return updatedProfile, nil
 
+}
+func (u userService) GetUserProfile(id uint) (serializer.ProfileAPI, error) {
+	var user entity.User
+	user.ID = id
+	userProfile, err := u.userRepository.GetUserProfile(user)
+	if err != nil {
+		return serializer.ProfileAPI{}, err
+	}
+	return userProfile, nil
 }
