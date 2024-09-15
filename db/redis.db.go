@@ -15,12 +15,11 @@ func ConnectRedis() *redis.Client {
 		panic("Failed to load .env file")
 	}
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:" + os.Getenv("RedisPort"),
+		Addr:     "redis:" + os.Getenv("RedisPort"),
 		Password: os.Getenv("RedisPass"),
 		DB:       1,
 	})
 	_, err := rdb.Ping(ctx).Result()
-
 	if err != nil {
 		panic("Could not connect to Redis !")
 	}

@@ -1,36 +1,17 @@
-services:
-  ginchat:
-    container_name: ginchat
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: ["go","run","/app/main.go"]
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env
-#    restart: always
-    volumes:
-      - .:/app
-    depends_on:
-      - postgres
-      - pgadmin
-      - redis
-    networks:
-      - GinNetwork
+version: "3.7"
 
+services:
   postgres:
     image: postgres:latest
-    container_name: ginchat-postgres
+    container_name: postgres
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: GinChat
     ports:
       - "5432:5432"
-    restart: always
     networks:
-      - GinNetwork
+      - live
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -42,20 +23,39 @@ services:
       PGADMIN_DEFAULT_PASSWORD: your_password
     ports:
       - "8000:8000"
-    restart: always
+    depends_on:
+      - postgres
     networks:
-      - GinNetwork
+      - live
 
   redis:
     image: redis:7.0.11-alpine
     container_name: ginchat-redis
     ports:
       - "6379:6379"
-    restart: always
     networks:
-      - GinNetwork
+      - live
+
+  ginchat:
+    container_name: ginchat
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: [ "go", "run", "/app/main.go" ]
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - live
+
 networks:
-  GinNetwork:
+  live:
     driver: bridge
 
 volumes:
