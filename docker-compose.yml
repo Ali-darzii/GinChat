@@ -3,7 +3,7 @@ version: "3.7"
 services:
   postgres:
     image: postgres:latest
-    container_name: postgres
+    container_name: GinChat-postgres
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
@@ -17,7 +17,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: ginchat-pgadmin
+    container_name: GinChat-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: youremail@gmail.com
       PGADMIN_DEFAULT_PASSWORD: your_password
@@ -37,7 +37,7 @@ services:
       - live
 
   ginchat:
-    container_name: ginchat
+    container_name: GinChatApp
     build:
       context: .
       dockerfile: Dockerfile
