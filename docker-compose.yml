@@ -21,6 +21,7 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: youremail@gmail.com
       PGADMIN_DEFAULT_PASSWORD: your_password
+      PGADMIN_LISTEN_PORT: 8000
     ports:
       - "8000:8000"
     depends_on:
