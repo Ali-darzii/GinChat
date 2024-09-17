@@ -66,6 +66,8 @@ func (a authService) Register(registerRequest serializer.RegisterRequest) (bool,
 	}
 	return isSignup, nil
 }
+
+// todo: need clean code
 func (a authService) Login(loginRequest serializer.LoginRequest) (entity.User, error) {
 	user, err := a.authRepository.FindByPhone(loginRequest.PhoneNo)
 	if err != nil {

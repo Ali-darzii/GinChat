@@ -26,9 +26,12 @@ func NewAuthRepository(postgresConnection *gorm.DB, redisConnection *redis.Clien
 	}
 }
 func (a authRepository) NewUserSave(user entity.User) error {
+	if res := a.postgresConn.Save(&user); res.Error != nil {
+		return res.Error
+	}
 	user.UserLogins.UserID = user.ID
-	if errs := a.postgresConn.Save(&user); errs.Error != nil {
-		return errs.Error
+	if res := a.postgresConn.Save(&user); res.Error != nil {
+		return res.Error
 	}
 	a.redisConn.Del(ctx, "userCount")
 
