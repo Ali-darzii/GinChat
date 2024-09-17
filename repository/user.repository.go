@@ -82,8 +82,7 @@ func (u userRepository) ProfileUpdate(user entity.User) (serializer.UpdatedProfi
 	}
 
 	var updatedProfile serializer.UpdatedProfile
-	res := u.postgresConn.Save(&user).Find(&updatedProfile)
-	if res.Error != nil {
+	if res := u.postgresConn.Save(&user).Find(&updatedProfile); res.Error != nil {
 		return serializer.UpdatedProfile{}, res.Error
 	}
 	return updatedProfile, nil
@@ -91,7 +90,7 @@ func (u userRepository) ProfileUpdate(user entity.User) (serializer.UpdatedProfi
 
 func (u userRepository) GetUserProfile(user entity.User) (serializer.ProfileAPI, error) {
 	var userProfile serializer.ProfileAPI
-	if res := u.postgresConn.First(&user).Find(userProfile); res.Error != nil {
+	if res := u.postgresConn.First(&user).Find(&userProfile); res.Error != nil {
 		return userProfile, res.Error
 	}
 	return userProfile, nil

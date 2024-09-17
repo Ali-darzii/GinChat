@@ -106,7 +106,7 @@ func (u userAPI) ProfileUpdate(request *gin.Context) {
 	return
 }
 
-// todo:need a test !
+// todo:need docs!
 func (u userAPI) GetUserProfile(request *gin.Context) {
 	id, err := strconv.ParseInt(request.Param("id"), 10, 32)
 	if err != nil {

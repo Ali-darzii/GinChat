@@ -34,7 +34,7 @@ type UpdatedProfile struct {
 	Username string `json:"username" form:"username"`
 }
 type ProfileAPI struct {
-	Avatar   string `json:"avatar" form:"avatar"`
-	Name     string `json:"name" form:"name"`
-	Username string `json:"username" form:"username"`
+	Avatar   *string `json:"avatar"`
+	Name     *string `json:"name"`
+	Username *string `json:"username"`
 }
