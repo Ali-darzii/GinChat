@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  serializer.APIUserPagination:
+  GinChat_serializer.APIUserPagination:
     properties:
       count:
         type: integer
@@ -10,10 +10,10 @@ definitions:
         type: string
       results:
         items:
-          $ref: '#/definitions/serializer.UserInRoom'
+          $ref: '#/definitions/GinChat_serializer.UserInRoom'
         type: array
     type: object
-  serializer.LoginRequest:
+  GinChat_serializer.LoginRequest:
     properties:
       name:
         type: string
@@ -25,7 +25,7 @@ definitions:
     - phone_no
     - token
     type: object
-  serializer.MakeNewChatRequest:
+  GinChat_serializer.MakeNewChatRequest:
     properties:
       content:
         type: string
@@ -36,7 +36,7 @@ definitions:
     - content
     - recipient_id
     type: object
-  serializer.RegisterRequest:
+  GinChat_serializer.RegisterRequest:
     properties:
       phone_no:
         maxLength: 11
@@ -45,7 +45,7 @@ definitions:
     required:
     - phone_no
     type: object
-  serializer.Room:
+  GinChat_serializer.Room:
     properties:
       avatar:
         type: string
@@ -59,10 +59,10 @@ definitions:
         type: string
       users:
         items:
-          $ref: '#/definitions/serializer.UserAPI'
+          $ref: '#/definitions/GinChat_serializer.UserAPI'
         type: array
     type: object
-  serializer.SendPvMessage:
+  GinChat_serializer.SendPvMessage:
     properties:
       content:
         type: string
@@ -76,14 +76,14 @@ definitions:
     - content
     - room_id
     type: object
-  serializer.Token:
+  GinChat_serializer.Token:
     properties:
       access_token:
         type: string
       refresh_token:
         type: string
     type: object
-  serializer.UpdatedProfile:
+  GinChat_serializer.UpdatedProfile:
     properties:
       avatar:
         type: string
@@ -94,7 +94,7 @@ definitions:
       username:
         type: string
     type: object
-  serializer.UserAPI:
+  GinChat_serializer.UserAPI:
     properties:
       id:
         type: integer
@@ -103,7 +103,7 @@ definitions:
       username:
         type: string
     type: object
-  serializer.UserInRoom:
+  GinChat_serializer.UserInRoom:
     properties:
       avatar:
         type: string
@@ -118,7 +118,7 @@ definitions:
       username:
         type: string
     type: object
-  utils.DummyMakeGroupChat:
+  GinChat_utils.DummyMakeGroupChat:
     properties:
       avatar:
         type: string
@@ -132,7 +132,7 @@ definitions:
     - name
     - recipients_id
     type: object
-  utils.DummyMessage:
+  GinChat_utils.DummyMessage:
     properties:
       content:
         type: string
@@ -145,7 +145,7 @@ definitions:
     - room_id
     - type
     type: object
-  utils.DummyProfileUpdate:
+  GinChat_utils.DummyProfileUpdate:
     properties:
       avatar:
         type: string
@@ -158,7 +158,7 @@ definitions:
     required:
     - name
     type: object
-  utils.ErrorResponse:
+  GinChat_utils.ErrorResponse:
     properties:
       detail:
         type: string
@@ -167,12 +167,21 @@ definitions:
       status:
         type: boolean
     type: object
-  utils.RegisterResponse:
+  GinChat_utils.RegisterResponse:
     properties:
       detail:
         type: string
       isSignup:
         type: boolean
+    type: object
+  serializer.ProfileAPI:
+    properties:
+      avatar:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
     type: object
 externalDocs:
   description: OpenAPI
@@ -200,23 +209,23 @@ paths:
         name: Register
         required: true
         schema:
-          $ref: '#/definitions/serializer.RegisterRequest'
+          $ref: '#/definitions/GinChat_serializer.RegisterRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.RegisterResponse'
+            $ref: '#/definitions/GinChat_utils.RegisterResponse'
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/utils.RegisterResponse'
+            $ref: '#/definitions/GinChat_utils.RegisterResponse'
         "400":
           description: Too_Many_Token_Request(7) | Token_Expired_Or_Invalid(2) | We_Don't_Know_What_Happened(8)
             | MUST_NOT_AUTHENTICATED(1)
           schema:
-            $ref: '#/definitions/utils.ErrorResponse'
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
       summary: send token
       tags:
       - Authenticate
@@ -230,19 +239,19 @@ paths:
         name: login
         required: true
         schema:
-          $ref: '#/definitions/serializer.LoginRequest'
+          $ref: '#/definitions/GinChat_serializer.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/serializer.Token'
+            $ref: '#/definitions/GinChat_serializer.Token'
         "400":
           description: Object_Not_Found(6) | Token_Expired_Or_Invalid(2) | Name_Field_Required_For_Register(12)
             | We_Don't_Know_What_Happened(8) | MUST_NOT_AUTHENTICATED(1)
           schema:
-            $ref: '#/definitions/utils.ErrorResponse'
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
       summary: check token
       tags:
       - Authenticate
@@ -259,11 +268,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/serializer.Room'
+            $ref: '#/definitions/GinChat_serializer.Room'
         "400":
           description: Token_Expired_Or_Invalid(2) | Object_Not_Found(6)
           schema:
-            $ref: '#/definitions/utils.ErrorResponse'
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
         "401":
           description: Unauthorized
       summary: get all chat rooms
@@ -283,15 +292,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/serializer.APIUserPagination'
+            $ref: '#/definitions/GinChat_serializer.APIUserPagination'
         "400":
           description: Token_Expired_Or_Invalid(2) | Bad_Format(5)
           schema:
-            $ref: '#/definitions/utils.ErrorResponse'
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
         "500":
           description: We_Don't_Know_What_Happened(8)
           schema:
-            $ref: '#/definitions/utils.ErrorResponse'
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
       summary: get all users
       tags:
       - user
@@ -310,7 +319,7 @@ paths:
         name: message
         required: true
         schema:
-          $ref: '#/definitions/utils.DummyMakeGroupChat'
+          $ref: '#/definitions/GinChat_utils.DummyMakeGroupChat'
       produces:
       - application/json
       responses:
@@ -319,11 +328,11 @@ paths:
         "400":
           description: Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)
           schema:
-            $ref: '#/definitions/utils.ErrorResponse'
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
         "500":
           description: We_Don't_Know_What_Happened(8)
           schema:
-            $ref: '#/definitions/utils.ErrorResponse'
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
       summary: make gp chat
       tags:
       - chat
@@ -341,19 +350,19 @@ paths:
         name: message
         required: true
         schema:
-          $ref: '#/definitions/serializer.MakeNewChatRequest'
+          $ref: '#/definitions/GinChat_serializer.MakeNewChatRequest'
       produces:
       - application/json
       responses:
         "201":
           description: you're recipient going to receive the response from ws !
           schema:
-            $ref: '#/definitions/serializer.SendPvMessage'
+            $ref: '#/definitions/GinChat_serializer.SendPvMessage'
         "400":
           description: Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)
             | We_Don't_Know_What_Happened(8)
           schema:
-            $ref: '#/definitions/utils.ErrorResponse'
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
       summary: make pv chat
       tags:
       - chat
@@ -371,19 +380,38 @@ paths:
         name: message
         required: true
         schema:
-          $ref: '#/definitions/utils.DummyMessage'
+          $ref: '#/definitions/GinChat_utils.DummyMessage'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/serializer.SendPvMessage'
+            $ref: '#/definitions/GinChat_serializer.SendPvMessage'
         "500":
           description: Internal Server Error
       summary: connect to websocket and send message
       tags:
       - chat
+  /user//get-profile/:id/:
+    get:
+      consumes:
+      - application/json
+      description: get authenticated user profile
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/serializer.ProfileAPI'
+        "400":
+          description: Object_Not_Found(6) | Bad_Format(5)
+          schema:
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
+      summary: get user profile
+      tags:
+      - user
   /user/profile-update/:id/:
     get:
       consumes:
@@ -397,23 +425,23 @@ paths:
         name: message
         required: true
         schema:
-          $ref: '#/definitions/utils.DummyProfileUpdate'
+          $ref: '#/definitions/GinChat_utils.DummyProfileUpdate'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/serializer.UpdatedProfile'
+            $ref: '#/definitions/GinChat_serializer.UpdatedProfile'
         "400":
           description: Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)
             | User_Name_Is_Taken(11)
           schema:
-            $ref: '#/definitions/utils.ErrorResponse'
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
         "500":
           description: We_Don't_Know_What_Happened(8)
           schema:
-            $ref: '#/definitions/utils.ErrorResponse'
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
       summary: update user profile
       tags:
       - user

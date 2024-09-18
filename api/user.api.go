@@ -106,7 +106,15 @@ func (u userAPI) ProfileUpdate(request *gin.Context) {
 	return
 }
 
-// todo:need docs!
+// @Summary get user profile
+// @Description get authenticated user profile
+// @Tags user
+// @Accept  json
+// @Produce  json
+// ss@Param   message  body
+// @Success 201 {object}   serializer.ProfileAPI
+// @Failure 400 {object}   utils.ErrorResponse "Object_Not_Found(6) | Bad_Format(5)"
+// @Router /user//get-profile/:id/ [get]
 func (u userAPI) GetUserProfile(request *gin.Context) {
 	id, err := strconv.ParseInt(request.Param("id"), 10, 32)
 	if err != nil {

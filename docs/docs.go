@@ -40,7 +40,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/serializer.LoginRequest"
+                            "$ref": "#/definitions/GinChat_serializer.LoginRequest"
                         }
                     }
                 ],
@@ -48,13 +48,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/serializer.Token"
+                            "$ref": "#/definitions/GinChat_serializer.Token"
                         }
                     },
                     "400": {
                         "description": "Object_Not_Found(6) | Token_Expired_Or_Invalid(2) | Name_Field_Required_For_Register(12) | We_Don't_Know_What_Happened(8) | MUST_NOT_AUTHENTICATED(1)",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
                         }
                     }
                 }
@@ -78,7 +78,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/serializer.RegisterRequest"
+                            "$ref": "#/definitions/GinChat_serializer.RegisterRequest"
                         }
                     }
                 ],
@@ -86,19 +86,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.RegisterResponse"
+                            "$ref": "#/definitions/GinChat_utils.RegisterResponse"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/utils.RegisterResponse"
+                            "$ref": "#/definitions/GinChat_utils.RegisterResponse"
                         }
                     },
                     "400": {
                         "description": "Too_Many_Token_Request(7) | Token_Expired_Or_Invalid(2) | We_Don't_Know_What_Happened(8) | MUST_NOT_AUTHENTICATED(1)",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
                         }
                     }
                 }
@@ -121,13 +121,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/serializer.Room"
+                            "$ref": "#/definitions/GinChat_serializer.Room"
                         }
                     },
                     "400": {
                         "description": "Token_Expired_Or_Invalid(2) | Object_Not_Found(6)",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
                         }
                     },
                     "401": {
@@ -153,19 +153,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/serializer.APIUserPagination"
+                            "$ref": "#/definitions/GinChat_serializer.APIUserPagination"
                         }
                     },
                     "400": {
                         "description": "Token_Expired_Or_Invalid(2) | Bad_Format(5)",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "We_Don't_Know_What_Happened(8)",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
                         }
                     }
                 }
@@ -191,7 +191,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/utils.DummyMakeGroupChat"
+                            "$ref": "#/definitions/GinChat_utils.DummyMakeGroupChat"
                         }
                     }
                 ],
@@ -202,13 +202,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "We_Don't_Know_What_Happened(8)",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
                         }
                     }
                 }
@@ -234,7 +234,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/serializer.MakeNewChatRequest"
+                            "$ref": "#/definitions/GinChat_serializer.MakeNewChatRequest"
                         }
                     }
                 ],
@@ -242,13 +242,13 @@ const docTemplate = `{
                     "201": {
                         "description": "you're recipient going to receive the response from ws !",
                         "schema": {
-                            "$ref": "#/definitions/serializer.SendPvMessage"
+                            "$ref": "#/definitions/GinChat_serializer.SendPvMessage"
                         }
                     },
                     "400": {
                         "description": "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5) | We_Don't_Know_What_Happened(8)",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
                         }
                     }
                 }
@@ -274,7 +274,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/utils.DummyMessage"
+                            "$ref": "#/definitions/GinChat_utils.DummyMessage"
                         }
                     }
                 ],
@@ -282,11 +282,40 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/serializer.SendPvMessage"
+                            "$ref": "#/definitions/GinChat_serializer.SendPvMessage"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/user//get-profile/:id/": {
+            "get": {
+                "description": "get authenticated user profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "get user profile",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/serializer.ProfileAPI"
+                        }
+                    },
+                    "400": {
+                        "description": "Object_Not_Found(6) | Bad_Format(5)",
+                        "schema": {
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
+                        }
                     }
                 }
             }
@@ -311,7 +340,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/utils.DummyProfileUpdate"
+                            "$ref": "#/definitions/GinChat_utils.DummyProfileUpdate"
                         }
                     }
                 ],
@@ -319,19 +348,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/serializer.UpdatedProfile"
+                            "$ref": "#/definitions/GinChat_serializer.UpdatedProfile"
                         }
                     },
                     "400": {
                         "description": "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5) | User_Name_Is_Taken(11)",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "We_Don't_Know_What_Happened(8)",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
                         }
                     }
                 }
@@ -339,7 +368,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "serializer.APIUserPagination": {
+        "GinChat_serializer.APIUserPagination": {
             "type": "object",
             "properties": {
                 "count": {
@@ -354,12 +383,12 @@ const docTemplate = `{
                 "results": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/serializer.UserInRoom"
+                        "$ref": "#/definitions/GinChat_serializer.UserInRoom"
                     }
                 }
             }
         },
-        "serializer.LoginRequest": {
+        "GinChat_serializer.LoginRequest": {
             "type": "object",
             "required": [
                 "phone_no",
@@ -377,7 +406,7 @@ const docTemplate = `{
                 }
             }
         },
-        "serializer.MakeNewChatRequest": {
+        "GinChat_serializer.MakeNewChatRequest": {
             "type": "object",
             "required": [
                 "content",
@@ -393,7 +422,7 @@ const docTemplate = `{
                 }
             }
         },
-        "serializer.RegisterRequest": {
+        "GinChat_serializer.RegisterRequest": {
             "type": "object",
             "required": [
                 "phone_no"
@@ -406,7 +435,7 @@ const docTemplate = `{
                 }
             }
         },
-        "serializer.Room": {
+        "GinChat_serializer.Room": {
             "type": "object",
             "properties": {
                 "avatar": {
@@ -427,12 +456,12 @@ const docTemplate = `{
                 "users": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/serializer.UserAPI"
+                        "$ref": "#/definitions/GinChat_serializer.UserAPI"
                     }
                 }
             }
         },
-        "serializer.SendPvMessage": {
+        "GinChat_serializer.SendPvMessage": {
             "type": "object",
             "required": [
                 "content",
@@ -453,7 +482,7 @@ const docTemplate = `{
                 }
             }
         },
-        "serializer.Token": {
+        "GinChat_serializer.Token": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -464,7 +493,7 @@ const docTemplate = `{
                 }
             }
         },
-        "serializer.UpdatedProfile": {
+        "GinChat_serializer.UpdatedProfile": {
             "type": "object",
             "properties": {
                 "avatar": {
@@ -481,7 +510,7 @@ const docTemplate = `{
                 }
             }
         },
-        "serializer.UserAPI": {
+        "GinChat_serializer.UserAPI": {
             "type": "object",
             "properties": {
                 "id": {
@@ -495,7 +524,7 @@ const docTemplate = `{
                 }
             }
         },
-        "serializer.UserInRoom": {
+        "GinChat_serializer.UserInRoom": {
             "type": "object",
             "properties": {
                 "avatar": {
@@ -518,7 +547,7 @@ const docTemplate = `{
                 }
             }
         },
-        "utils.DummyMakeGroupChat": {
+        "GinChat_utils.DummyMakeGroupChat": {
             "type": "object",
             "required": [
                 "name",
@@ -539,7 +568,7 @@ const docTemplate = `{
                 }
             }
         },
-        "utils.DummyMessage": {
+        "GinChat_utils.DummyMessage": {
             "type": "object",
             "required": [
                 "content",
@@ -558,7 +587,7 @@ const docTemplate = `{
                 }
             }
         },
-        "utils.DummyProfileUpdate": {
+        "GinChat_utils.DummyProfileUpdate": {
             "type": "object",
             "required": [
                 "name"
@@ -578,7 +607,7 @@ const docTemplate = `{
                 }
             }
         },
-        "utils.ErrorResponse": {
+        "GinChat_utils.ErrorResponse": {
             "type": "object",
             "properties": {
                 "detail": {
@@ -592,7 +621,7 @@ const docTemplate = `{
                 }
             }
         },
-        "utils.RegisterResponse": {
+        "GinChat_utils.RegisterResponse": {
             "type": "object",
             "properties": {
                 "detail": {
@@ -600,6 +629,20 @@ const docTemplate = `{
                 },
                 "isSignup": {
                     "type": "boolean"
+                }
+            }
+        },
+        "serializer.ProfileAPI": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         }
