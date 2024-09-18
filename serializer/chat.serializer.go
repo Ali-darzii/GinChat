@@ -21,10 +21,11 @@ type Message struct {
 }
 
 type SendPvMessage struct {
-	Type    string `json:"type"`
-	RoomID  uint   `json:"room_id" binding:"required"`
-	Content string `json:"content,omitempty" binding:"required"`
-	Sender  uint   `json:"sender"`
+	Type      string    `json:"type"`
+	RoomID    uint      `json:"room_id" binding:"required"`
+	Content   string    `json:"content,omitempty" binding:"required"`
+	Sender    uint      `json:"sender"`
+	TimeStamp time.Time `json:"timestamp"`
 }
 
 type NewGroupChat struct {

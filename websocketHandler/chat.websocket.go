@@ -5,7 +5,6 @@ import (
 	"GinChat/entity"
 	"GinChat/serializer"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 )
@@ -25,7 +24,7 @@ type ClientManager struct {
 var (
 	postDb *gorm.DB = db.ConnectPostgres()
 
-	// in memory system (every time we restart the server --> it will delete all saved Clients)
+	// in memory system
 	Manager = ClientManager{
 		Broadcast:  make(chan serializer.Message),
 		Register:   make(chan *Client),
@@ -66,10 +65,11 @@ func (manager *ClientManager) Start() {
 					message.Recipients = []uint{message.Sender}
 				} else {
 					pvMessage := serializer.SendPvMessage{
-						Type:    message.Type,
-						RoomID:  message.RoomID,
-						Content: message.Content,
-						Sender:  message.Sender,
+						Type:      message.Type,
+						RoomID:    message.RoomID,
+						Content:   message.Content,
+						Sender:    message.Sender,
+						TimeStamp: privateMessage.Timestamp,
 					}
 					jsonMessage, _ = json.Marshal(&pvMessage)
 				}
@@ -85,10 +85,11 @@ func (manager *ClientManager) Start() {
 					message.Recipients = []uint{message.Sender}
 				} else {
 					gpMessage := serializer.SendPvMessage{
-						Type:    message.Type,
-						RoomID:  message.RoomID,
-						Content: message.Content,
-						Sender:  message.Sender,
+						Type:      message.Type,
+						RoomID:    message.RoomID,
+						Content:   message.Content,
+						Sender:    message.Sender,
+						TimeStamp: groupMessage.TimeStamp,
 					}
 					jsonMessage, _ = json.Marshal(&gpMessage)
 				}
@@ -175,7 +176,6 @@ func (c *Client) Read() {
 				c.Disconnect()
 				break
 			}
-			fmt.Println(readMessage.Recipients)
 			var sameRoom bool
 			//checking
 			for _, item := range readMessage.Recipients {

@@ -477,6 +477,9 @@ const docTemplate = `{
                 "sender": {
                     "type": "integer"
                 },
+                "timestamp": {
+                    "type": "string"
+                },
                 "type": {
                     "type": "string"
                 }
