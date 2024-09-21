@@ -48,7 +48,7 @@ func (a authAPI) Register(request *gin.Context) {
 			return
 		}
 
-		request.JSON(http.StatusBadRequest, err.Error())
+		request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
 		return
 	}
 	if isSignup {

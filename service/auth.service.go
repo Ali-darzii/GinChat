@@ -67,22 +67,22 @@ func (a authService) Register(registerRequest serializer.RegisterRequest) (bool,
 	return isSignup, nil
 }
 
-// todo: need clean code
 func (a authService) Login(loginRequest serializer.LoginRequest) (entity.User, error) {
 	user, err := a.authRepository.FindByPhone(loginRequest.PhoneNo)
+	var errorUser entity.User
 	if err != nil {
-		return entity.User{}, err
+		return errorUser, err
 	}
 
 	if user.Phone.ExpTime == nil || user.Phone.ExpTime.Before(time.Now()) {
-		return entity.User{}, errors.New("expired_time")
+		return errorUser, errors.New("expired_time")
 	}
 	if loginRequest.Token != *user.Phone.Token {
-		return entity.User{}, errors.New("invalid_token")
+		return errorUser, errors.New("invalid_token")
 	}
 	if user.Name == nil || *user.Name == "" {
 		if loginRequest.Name == "" {
-			return entity.User{}, errors.New("name_field_required")
+			return errorUser, errors.New("name_field_required")
 		}
 		user.Name = &loginRequest.Name
 	}
@@ -90,10 +90,10 @@ func (a authService) Login(loginRequest serializer.LoginRequest) (entity.User, e
 	user.Phone.Token = nil
 
 	if err = a.authRepository.UserSave(user); err != nil {
-		return entity.User{}, err
+		return errorUser, err
 	}
 	if err = a.authRepository.PhoneSave(user.Phone); err != nil {
-		return entity.User{}, err
+		return errorUser, err
 	}
 
 	return user, nil
