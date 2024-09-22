@@ -58,7 +58,7 @@ func (manager *ClientManager) Start() {
 				privateMessage := entity.PrivateMessageRoom{
 					Sender:    message.Sender,
 					PrivateID: message.RoomID,
-					Body:      message.Content,
+					Body:      &message.Content,
 				}
 				if res := postDb.Save(&privateMessage); res.Error != nil {
 					jsonMessage, _ = json.Marshal(&serializer.ServerMessage{Content: "can't save message in db", RoomID: message.RoomID, Status: false})
@@ -78,7 +78,7 @@ func (manager *ClientManager) Start() {
 				groupMessage := entity.GroupMessageRoom{
 					Sender:  message.Sender,
 					GroupID: message.RoomID,
-					Body:    message.Content,
+					Body:    &message.Content,
 				}
 				if res := postDb.Save(&groupMessage); res.Error != nil {
 					jsonMessage, _ = json.Marshal(&serializer.ServerMessage{Content: "can't save message in db", RoomID: message.RoomID, Status: false})
