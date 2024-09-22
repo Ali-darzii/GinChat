@@ -89,3 +89,19 @@ type Room struct {
 	Users     []UserAPI  `json:"users"`
 	TimeStamp *time.Time `json:"time_stamp"`
 }
+
+type PvMessageRequest struct {
+	RoomID  uint                  `json:"room_id" binding:"required" form:"room_id"`
+	Content string                `json:"content,omitempty" form:"content"`
+	Image   *multipart.FileHeader `json:"image" form:"image"`
+	Sender  uint
+}
+
+// either we should have content or image or both
+func (p *PvMessageRequest) PvMessageValidate() bool {
+
+	if p.Content == "" && p.Image == nil {
+		return false
+	}
+	return true
+}

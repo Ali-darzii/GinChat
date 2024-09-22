@@ -96,6 +96,7 @@ func Urls() *gin.Engine {
 			chat.GET("get-rooms/", chatAPI.GetAllRooms)
 			chat.POST("make-private/", chatAPI.MakePvChat)
 			chat.POST("make-group/", chatAPI.MakeGroupChat)
+			chat.POST("send-pv-message/", chatAPI.SendPvMessage)
 		}
 
 	}

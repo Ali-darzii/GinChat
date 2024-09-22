@@ -19,6 +19,7 @@ type ChatAPI interface {
 	GetAllRooms(ctx *gin.Context)
 	MakePvChat(*gin.Context)
 	MakeGroupChat(request *gin.Context)
+	SendPvMessage(request *gin.Context)
 }
 
 type chatAPI struct {
@@ -184,5 +185,19 @@ func (c chatAPI) MakeGroupChat(request *gin.Context) {
 	}
 	websocketHandler.Manager.Broadcast <- message
 	request.JSON(http.StatusCreated, nil)
+	return
+}
+
+func (c chatAPI) SendPvMessage(request *gin.Context) {
+	var pvMessageRequest serializer.PvMessageRequest
+	if err := request.ShouldBindWith(&pvMessageRequest, binding.FormMultipart); err != nil {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
+	}
+	if ok := pvMessageRequest.PvMessageValidate(); !ok {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
+	}
+	request.JSON(http.StatusOK, nil)
 	return
 }
