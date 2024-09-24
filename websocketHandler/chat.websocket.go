@@ -2,7 +2,6 @@ package websocketHandler
 
 import (
 	"GinChat/db"
-	"GinChat/entity"
 	"GinChat/serializer"
 	"encoding/json"
 	"github.com/gorilla/websocket"
@@ -16,7 +15,7 @@ type Client struct {
 }
 type ClientManager struct {
 	Clients    map[*Client]bool
-	Broadcast  chan serializer.Message
+	Broadcast  chan serializer.MessageV2
 	Register   chan *Client
 	Unregister chan *Client
 }
@@ -26,7 +25,7 @@ var (
 
 	// in memory system
 	Manager = ClientManager{
-		Broadcast:  make(chan serializer.Message),
+		Broadcast:  make(chan serializer.MessageV2),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		Clients:    make(map[*Client]bool),
@@ -52,56 +51,42 @@ func (manager *ClientManager) Start() {
 		case message := <-manager.Broadcast:
 			var jsonMessage []byte
 
-			switch message.Type {
+			switch message.PvMessage.Type {
 			// because u need a send message to create a pv_message --> pv_message and new_pv_message are same
 			case "pv_message", "new_pv_message":
-				privateMessage := entity.PrivateMessageRoom{
-					Sender:    message.Sender,
-					PrivateID: message.RoomID,
-					Body:      &message.Content,
-				}
-				if res := postDb.Save(&privateMessage); res.Error != nil {
-					jsonMessage, _ = json.Marshal(&serializer.ServerMessage{Content: "can't save message in db", RoomID: message.RoomID, Status: false})
-					message.Recipients = []uint{message.Sender}
-				} else {
-					pvMessage := serializer.SendPvMessage{
-						Type:      message.Type,
-						RoomID:    message.RoomID,
-						Content:   message.Content,
-						Sender:    message.Sender,
-						TimeStamp: privateMessage.Timestamp,
-					}
-					jsonMessage, _ = json.Marshal(&pvMessage)
-				}
+				jsonMessage, _ = json.Marshal(&message.PvMessage)
 
-			case "group_message":
-				groupMessage := entity.GroupMessageRoom{
-					Sender:  message.Sender,
-					GroupID: message.RoomID,
-					Body:    &message.Content,
-				}
-				if res := postDb.Save(&groupMessage); res.Error != nil {
-					jsonMessage, _ = json.Marshal(&serializer.ServerMessage{Content: "can't save message in db", RoomID: message.RoomID, Status: false})
-					message.Recipients = []uint{message.Sender}
-				} else {
-					gpMessage := serializer.SendPvMessage{
-						Type:      message.Type,
-						RoomID:    message.RoomID,
-						Content:   message.Content,
-						Sender:    message.Sender,
-						TimeStamp: groupMessage.TimeStamp,
+				//NEED UPDATE BECAUSE OF SERIALIZER and METHOD CHANGING !!!!!!
+				/*/
+				case "group_message":
+					groupMessage := entity.GroupMessageRoom{
+						Sender:  message.Sender,
+						GroupID: message.RoomID,
+						Body:    &message.Content,
+					}
+					if res := postDb.Save(&groupMessage); res.Error != nil {
+						jsonMessage, _ = json.Marshal(&serializer.ServerMessage{Content: "can't save message in db", RoomID: message.RoomID, Status: false})
+						message.Recipients = []uint{message.Sender}
+					} else {
+						gpMessage := serializer.SendPvMessage{
+							Type:      message.Type,
+							RoomID:    message.RoomID,
+							Content:   message.Content,
+							Sender:    message.Sender,
+							TimeStamp: groupMessage.TimeStamp,
+						}
+						jsonMessage, _ = json.Marshal(&gpMessage)
+					}
+
+				case "new_group_message":
+					gpMessage := serializer.NewGroupChat{
+						Avatar:  message.Avatar,
+						Type:    message.Type,
+						RoomID:  message.RoomID,
+						Members: message.Recipients,
 					}
 					jsonMessage, _ = json.Marshal(&gpMessage)
-				}
-
-			case "new_group_message":
-				gpMessage := serializer.NewGroupChat{
-					Avatar:  message.Avatar,
-					Type:    message.Type,
-					RoomID:  message.RoomID,
-					Members: message.Recipients,
-				}
-				jsonMessage, _ = json.Marshal(&gpMessage)
+				/*/
 			}
 
 			for _, item := range message.Recipients {
@@ -122,12 +107,14 @@ func (manager *ClientManager) Start() {
 	}
 
 }
+
+// Reading Method because of file saving(image and voice) moved on http then on ws
 func (c *Client) Read() {
 	defer func() {
 		Manager.Unregister <- c
 		_ = c.Socket.Close()
 	}()
-
+	/*/
 	for {
 		//Read message
 		_, message, err := c.Socket.ReadMessage()
@@ -198,6 +185,7 @@ func (c *Client) Read() {
 
 		}
 	}
+	/*/
 }
 func (c *Client) Write() {
 

@@ -12,6 +12,7 @@ type ChatService interface {
 	GetAllRooms(string) ([]serializer.Room, error)
 	MakePvChat(serializer.MakeNewChatRequest, string) (serializer.Message, error)
 	MakeGroupChat(serializer.MakeGroupChatRequest, string) (serializer.Message, error)
+	SendPvMessage(serializer.PvMessageRequest, string) (serializer.MessageV2, error)
 }
 
 type chatService struct {
@@ -55,7 +56,7 @@ func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChat
 			return serializer.Message{}, errors.New("bad_format")
 		}
 		imagePath = "assets/uploads/groupAvatar/"
-		imagePath = utils.ImageController(imagePath, makeGroupChatRequest.Avatar.Filename)
+		imagePath = utils.ImagePathController(imagePath, makeGroupChatRequest.Avatar.Filename)
 	}
 	groupRoom := entity.GroupRoom{
 		Avatar: &imagePath,
@@ -82,6 +83,54 @@ func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChat
 	}
 
 	//websocketHandler.Manager.Broadcast <- message, moved to api
+
+	return message, nil
+
+}
+
+// todo: need test
+func (c chatService) SendPvMessage(pvMessage serializer.PvMessageRequest, phoneNo string) (serializer.MessageV2, error) {
+	userId, err := c.chatRepository.FindByPhone(phoneNo)
+	var message serializer.MessageV2
+	if err != nil {
+		return message, err
+	}
+
+	var imagePath string
+	if pvMessage.Image != nil {
+		if ok := utils.ImageValidate(pvMessage.Image); !ok {
+			return message, errors.New("bad_format")
+		}
+		imagePath = "assets/uploads/pvMessage/"
+		imagePath = utils.ImagePathController(imagePath, pvMessage.Image.Filename)
+	}
+
+	privateMessage := entity.PrivateMessageRoom{
+		PrivateID: pvMessage.RoomID,
+		Sender:    userId,
+		Body:      &pvMessage.Content,
+		Image:     &imagePath,
+	}
+	recipientsId, err := c.chatRepository.SendPvMessage(privateMessage, pvMessage.RoomID)
+	if err != nil {
+		return message, err
+	}
+	var sameRoom bool
+	for _, item := range recipientsId {
+		if userId == item {
+			sameRoom = true
+		}
+	}
+	if !sameRoom {
+		return message, errors.New("room_id_issue")
+	}
+
+	message.PvMessage.Type = "pv_message"
+	message.PvMessage.Image = imagePath
+	message.PvMessage.RoomID = pvMessage.RoomID
+	message.PvMessage.Sender = userId
+	message.PvMessage.Content = pvMessage.Content
+	message.Recipients = recipientsId
 
 	return message, nil
 

@@ -16,23 +16,9 @@ type Message struct {
 	Avatar     string `json:"avatar"`
 	RoomID     uint   `json:"room_id" binding:"required"`
 	Content    string `json:"content,omitempty" binding:"required"`
+	Image      string `json:"image"`
 	Sender     uint   `json:"sender"`
 	Recipients []uint `json:"recipients"`
-}
-
-type SendPvMessage struct {
-	Type      string    `json:"type"`
-	RoomID    uint      `json:"room_id" binding:"required"`
-	Content   string    `json:"content,omitempty" binding:"required"`
-	Sender    uint      `json:"sender"`
-	TimeStamp time.Time `json:"timestamp"`
-}
-
-type NewGroupChat struct {
-	Avatar  string `json:"avatar" form:"avatar"`
-	Type    string `json:"type"`
-	RoomID  uint   `json:"room_id"`
-	Members []uint `json:"members"`
 }
 
 func (c Message) PrivateMessageValidate() bool {
@@ -47,6 +33,28 @@ func (c Message) NewPrivateMessageValidate() bool {
 	}
 
 	return true
+}
+
+type MessageV2 struct {
+	Avatar     string `json:"avatar"`
+	Recipients []uint `json:"recipients"`
+	PvMessage  SendPvMessage
+}
+
+type SendPvMessage struct {
+	Type      string    `json:"type"`
+	RoomID    uint      `json:"room_id" binding:"required"`
+	Content   string    `json:"content,omitempty" binding:"required"`
+	Sender    uint      `json:"sender"`
+	Image     string    `json:"image"`
+	TimeStamp time.Time `json:"timestamp"`
+}
+
+type NewGroupChat struct {
+	Avatar  string `json:"avatar" form:"avatar"`
+	Type    string `json:"type"`
+	RoomID  uint   `json:"room_id"`
+	Members []uint `json:"members"`
 }
 
 type MakeGroupChatRequest struct {
@@ -94,7 +102,6 @@ type PvMessageRequest struct {
 	RoomID  uint                  `json:"room_id" binding:"required" form:"room_id"`
 	Content string                `json:"content,omitempty" form:"content"`
 	Image   *multipart.FileHeader `json:"image" form:"image"`
-	Sender  uint
 }
 
 // either we should have content or image or both

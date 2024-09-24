@@ -183,7 +183,8 @@ func (c chatAPI) MakeGroupChat(request *gin.Context) {
 		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
 		return
 	}
-	websocketHandler.Manager.Broadcast <- message
+	//NEED UPDATE BECAUSE OF SERIALIZER and METHOD CHANGING !!!!!!
+	//websocketHandler.Manager.Broadcast <- message
 	request.JSON(http.StatusCreated, nil)
 	return
 }
@@ -198,6 +199,27 @@ func (c chatAPI) SendPvMessage(request *gin.Context) {
 		request.JSON(http.StatusBadRequest, utils.BadFormat)
 		return
 	}
+
+	userPhoneNo, ok := request.Get("phoneNo")
+	if !ok {
+		request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
+		return
+	}
+	message, err := c.service.SendPvMessage(pvMessageRequest, userPhoneNo.(string))
+	if err != nil {
+		request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
+		return
+	}
+	if pvMessageRequest.Image != nil {
+		pvMessageRequest.Image.Filename = message.PvMessage.Image[25:]
+		if err = request.SaveUploadedFile(pvMessageRequest.Image, "assets/uploads/pvMessage/"+pvMessageRequest.Image.Filename); err != nil {
+			request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
+			return
+		}
+	}
+
+	websocketHandler.Manager.Broadcast <- message
+
 	request.JSON(http.StatusOK, nil)
 	return
 }

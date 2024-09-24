@@ -3,7 +3,6 @@ package repository
 import (
 	"GinChat/entity"
 	"GinChat/serializer"
-	"GinChat/websocketHandler"
 	"context"
 	"errors"
 	"github.com/go-redis/redis/v8"
@@ -18,6 +17,7 @@ type ChatRepository interface {
 	GetAllRooms(uint) ([]serializer.Room, error)
 	MakePvChat(serializer.MakeNewChatRequest, uint) (serializer.Message, error)
 	MakeGroupChat(entity.GroupRoom) (entity.GroupRoom, error)
+	SendPvMessage(entity.PrivateMessageRoom, uint) ([]uint, error)
 }
 type chatRepository struct {
 	postgresConn *gorm.DB
@@ -130,7 +130,7 @@ func (c chatRepository) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequ
 		Content:    makeNewChatRequest.Content,
 		Recipients: []uint{makeNewChatRequest.RecipientID},
 	}
-	websocketHandler.Manager.Broadcast <- message
+	//websocketHandler.Manager.Broadcast <- message
 
 	return message, nil
 }
@@ -141,4 +141,16 @@ func (c chatRepository) MakeGroupChat(groupRoom entity.GroupRoom) (entity.GroupR
 
 	return groupRoom, nil
 
+}
+func (c chatRepository) SendPvMessage(pvMessage entity.PrivateMessageRoom, roomId uint) ([]uint, error) {
+	var recipientsId []uint
+	if res := c.postgresConn.Save(&pvMessage); res.Error != nil {
+		return recipientsId, res.Error
+	}
+
+	if res := c.postgresConn.Table("pv_users").Select("user_id").Where("private_room_id = ?", roomId).Pluck("user_id", &recipientsId); res.Error != nil {
+		return recipientsId, res.Error
+	}
+
+	return recipientsId, nil
 }

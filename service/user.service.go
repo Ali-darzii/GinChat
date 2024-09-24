@@ -71,7 +71,7 @@ func (u userService) ProfileUpdate(profile serializer.ProfileUpdateRequest) (ser
 			return serializer.UpdatedProfile{}, errors.New("bad_format")
 		}
 		imagePath = "assets/uploads/userAvatar/"
-		imagePath = utils.ImageController(imagePath, profile.Avatar.Filename)
+		imagePath = utils.ImagePathController(imagePath, profile.Avatar.Filename)
 	}
 
 	user := entity.User{

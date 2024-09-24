@@ -97,7 +97,8 @@ func ImageValidate(image *multipart.FileHeader) bool {
 	}
 	return true
 }
-func ImageController(imagePath string, imageName string) string {
+
+func ImagePathController(imagePath string, imageName string) string {
 	if _, err := os.Open(imagePath + imageName); err == nil {
 		index := strings.Index(imageName, ".")
 		noFormatName := imageName[:index]
