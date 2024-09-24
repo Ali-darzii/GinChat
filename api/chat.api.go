@@ -16,10 +16,11 @@ import (
 
 type ChatAPI interface {
 	ChatWs(*gin.Context)
-	GetAllRooms(ctx *gin.Context)
+	GetAllRooms(*gin.Context)
 	MakePvChat(*gin.Context)
-	MakeGroupChat(request *gin.Context)
-	SendPvMessage(request *gin.Context)
+	MakeGroupChat(*gin.Context)
+	SendPvMessage(*gin.Context)
+	SendGpMessage(*gin.Context)
 }
 
 type chatAPI struct {
@@ -197,13 +198,13 @@ func (c chatAPI) MakeGroupChat(request *gin.Context) {
 // @Tags chat
 // @Accept  json
 // @Produce  json
-// @Param   message  body  serializer.PvMessageRequest  true  "Message body"
+// @Param   message  body  serializer.MessageRequest  true  "Message body"
 // @Success 201 {object}   nil
 // @Failure 400 {object}   utils.ErrorResponse "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)"
 // @Failure 500 {object}   utils.ErrorResponse "We_Don't_Know_What_Happened(8)"
 // @Router /chat/send-pv-message [post]
 func (c chatAPI) SendPvMessage(request *gin.Context) {
-	var pvMessageRequest serializer.PvMessageRequest
+	var pvMessageRequest serializer.MessageRequest
 	if err := request.ShouldBindWith(&pvMessageRequest, binding.FormMultipart); err != nil {
 		request.JSON(http.StatusBadRequest, utils.BadFormat)
 		return
@@ -242,4 +243,47 @@ func (c chatAPI) SendPvMessage(request *gin.Context) {
 
 	request.JSON(http.StatusOK, nil)
 	return
+}
+
+func (c chatAPI) SendGpMessage(request *gin.Context) {
+	var gpMessageRequest serializer.MessageRequest
+	if err := request.ShouldBindWith(&gpMessageRequest, binding.FormMultipart); err != nil {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
+	}
+	if ok := gpMessageRequest.PvMessageValidate(); !ok {
+		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
+	}
+
+	userPhoneNo, ok := request.Get("phoneNo")
+	if !ok {
+		request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
+		return
+	}
+	message, err := c.service.SendGpMessage(gpMessageRequest, userPhoneNo.(string))
+	if err != nil {
+		if err.Error() == "bad_format" {
+			request.JSON(http.StatusBadRequest, utils.BadFormat)
+			return
+		}
+		if err.Error() == "room_id_issue" {
+			request.JSON(http.StatusBadRequest, utils.ObjectNotFound)
+			return
+		}
+		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
+		return
+	}
+	if gpMessageRequest.Image != nil {
+		gpMessageRequest.Image.Filename = message.PvMessage.Image[25:]
+		if err = request.SaveUploadedFile(gpMessageRequest.Image, "assets/uploads/gpMessage/"+gpMessageRequest.Image.Filename); err != nil {
+			request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
+			return
+		}
+	}
+	websocketHandler.Manager.Broadcast <- message
+
+	request.JSON(http.StatusOK, nil)
+	return
+
 }

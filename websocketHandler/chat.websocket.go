@@ -55,7 +55,8 @@ func (manager *ClientManager) Start() {
 			// because u need a send message to create a pv_message --> pv_message and new_pv_message are same
 			case "pv_message", "new_pv_message":
 				jsonMessage, _ = json.Marshal(&message.PvMessage)
-
+			case "gp_message":
+				jsonMessage, _ = json.Marshal(&message.PvMessage)
 				//NEED UPDATE BECAUSE OF SERIALIZER and METHOD CHANGING !!!!!!
 				/*/
 				case "group_message":

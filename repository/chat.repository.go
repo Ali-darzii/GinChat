@@ -17,7 +17,8 @@ type ChatRepository interface {
 	GetAllRooms(uint) ([]serializer.Room, error)
 	MakePvChat(serializer.MakeNewChatRequest, uint) (serializer.Message, error)
 	MakeGroupChat(entity.GroupRoom) (entity.GroupRoom, error)
-	SendPvMessage(entity.PrivateMessageRoom, uint) ([]uint, error)
+	SendPvMessage(entity.PrivateMessageRoom) ([]uint, error)
+	SendGpMessage(entity.GroupMessageRoom) ([]uint, error)
 }
 type chatRepository struct {
 	postgresConn *gorm.DB
@@ -142,15 +143,26 @@ func (c chatRepository) MakeGroupChat(groupRoom entity.GroupRoom) (entity.GroupR
 	return groupRoom, nil
 
 }
-func (c chatRepository) SendPvMessage(pvMessage entity.PrivateMessageRoom, roomId uint) ([]uint, error) {
+func (c chatRepository) SendPvMessage(pvMessage entity.PrivateMessageRoom) ([]uint, error) {
 	var recipientsId []uint
 	if res := c.postgresConn.Save(&pvMessage); res.Error != nil {
 		return recipientsId, res.Error
 	}
 
-	if res := c.postgresConn.Table("pv_users").Select("user_id").Where("private_room_id = ?", roomId).Pluck("user_id", &recipientsId); res.Error != nil {
+	if res := c.postgresConn.Table("pv_users").Select("user_id").Where("private_room_id = ?", pvMessage.PrivateID).Pluck("user_id", &recipientsId); res.Error != nil {
 		return recipientsId, res.Error
 	}
 
+	return recipientsId, nil
+}
+func (c chatRepository) SendGpMessage(groupMessage entity.GroupMessageRoom) ([]uint, error) {
+	var recipientsId []uint
+	if res := c.postgresConn.Save(&groupMessage); res.Error != nil {
+		return recipientsId, res.Error
+	}
+
+	if res := c.postgresConn.Table("group_users").Select("user_id").Where("group_room_id = ?", groupMessage.GroupID).Pluck("user_id", &recipientsId); res.Error != nil {
+		return recipientsId, res.Error
+	}
 	return recipientsId, nil
 }

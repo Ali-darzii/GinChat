@@ -12,7 +12,8 @@ type ChatService interface {
 	GetAllRooms(string) ([]serializer.Room, error)
 	MakePvChat(serializer.MakeNewChatRequest, string) (serializer.Message, error)
 	MakeGroupChat(serializer.MakeGroupChatRequest, string) (serializer.Message, error)
-	SendPvMessage(serializer.PvMessageRequest, string) (serializer.MessageV2, error)
+	SendPvMessage(serializer.MessageRequest, string) (serializer.MessageV2, error)
+	SendGpMessage(serializer.MessageRequest, string) (serializer.MessageV2, error)
 }
 
 type chatService struct {
@@ -87,7 +88,7 @@ func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChat
 	return message, nil
 
 }
-func (c chatService) SendPvMessage(pvMessage serializer.PvMessageRequest, phoneNo string) (serializer.MessageV2, error) {
+func (c chatService) SendPvMessage(pvMessage serializer.MessageRequest, phoneNo string) (serializer.MessageV2, error) {
 	userId, err := c.chatRepository.FindByPhone(phoneNo)
 	var message serializer.MessageV2
 	if err != nil {
@@ -109,7 +110,7 @@ func (c chatService) SendPvMessage(pvMessage serializer.PvMessageRequest, phoneN
 		Body:      &pvMessage.Content,
 		Image:     &imagePath,
 	}
-	recipientsId, err := c.chatRepository.SendPvMessage(privateMessage, pvMessage.RoomID)
+	recipientsId, err := c.chatRepository.SendPvMessage(privateMessage)
 	if err != nil {
 		return message, err
 	}
@@ -132,4 +133,46 @@ func (c chatService) SendPvMessage(pvMessage serializer.PvMessageRequest, phoneN
 
 	return message, nil
 
+}
+func (c chatService) SendGpMessage(gpMessage serializer.MessageRequest, phoneNo string) (serializer.MessageV2, error) {
+	userId, err := c.chatRepository.FindByPhone(phoneNo)
+	var message serializer.MessageV2
+	if err != nil {
+		return message, err
+	}
+
+	var imagePath string
+	if gpMessage.Image != nil {
+		if ok := utils.ImageValidate(gpMessage.Image); !ok {
+			return message, errors.New("bad_format")
+		}
+		imagePath = "assets/uploads/pvMessage/"
+		imagePath = utils.ImagePathController(imagePath, gpMessage.Image.Filename)
+	}
+	groupMessage := entity.GroupMessageRoom{
+		GroupID: gpMessage.RoomID,
+		Sender:  userId,
+		Body:    &gpMessage.Content,
+		Image:   &imagePath,
+	}
+	recipientsId, err := c.chatRepository.SendGpMessage(groupMessage)
+	if err != nil {
+		return message, err
+	}
+	var sameRoom bool
+	for _, item := range recipientsId {
+		if userId == item {
+			sameRoom = true
+		}
+	}
+	if !sameRoom {
+		return message, errors.New("room_id_issue")
+	}
+	message.PvMessage.Type = "gp_message"
+	message.PvMessage.Image = imagePath
+	message.PvMessage.RoomID = gpMessage.RoomID
+	message.PvMessage.Sender = userId
+	message.PvMessage.Content = gpMessage.Content
+	message.Recipients = recipientsId
+	return message, nil
 }
