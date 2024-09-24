@@ -91,8 +91,8 @@ func ImageValidate(image *multipart.FileHeader) bool {
 	if !formatCheck {
 		return false
 	}
-	// Size > 6mb
-	if image.Size > 6000 {
+	//todo: make image quality less
+	if image.Size > 600000 {
 		return false
 	}
 	return true

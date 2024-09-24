@@ -87,8 +87,6 @@ func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChat
 	return message, nil
 
 }
-
-// todo: need test
 func (c chatService) SendPvMessage(pvMessage serializer.PvMessageRequest, phoneNo string) (serializer.MessageV2, error) {
 	userId, err := c.chatRepository.FindByPhone(phoneNo)
 	var message serializer.MessageV2
