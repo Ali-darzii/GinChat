@@ -114,78 +114,85 @@ func (c *Client) Read() {
 		Manager.Unregister <- c
 		_ = c.Socket.Close()
 	}()
-	/*/
+
 	for {
 		//Read message
-		_, message, err := c.Socket.ReadMessage()
+		_, _, err := c.Socket.ReadMessage()
 
 		if err != nil {
 			c.Disconnect()
 			break
 		}
-
-		var readMessage serializer.Message
-		if err = json.Unmarshal(message, &readMessage); err != nil {
-			c.Disconnect()
-			break
+		serverMessage := serializer.ServerMessage{Content: "Read Message doesn't work, use api(cause of sending image and voice)"}
+		jsonMessage, err := json.Marshal(serverMessage)
+		if err != nil {
+			c.Send <- jsonMessage
 		}
-		readMessage.Sender = c.Id
 
-		switch readMessage.Type {
-		case "pv_message":
-			if ok := readMessage.PrivateMessageValidate(); !ok {
+		/*
+			var readMessage serializer.Message
+			if err = json.Unmarshal(message, &readMessage); err != nil {
 				c.Disconnect()
 				break
 			}
+			readMessage.Sender = c.Id
 
-			if res := postDb.Table("pv_users").Select("user_id").Where("private_room_id = ?", readMessage.RoomID).Pluck("user_id", &readMessage.Recipients); res.Error != nil {
-				c.Disconnect()
-				break
-			}
-			var sameRoom bool
-			//checking
-			for _, item := range readMessage.Recipients {
-				if item == c.Id {
-					//readMessage.Recipients = append(readMessage.Recipients[:index], readMessage.Recipients[index+1:]...)
-					sameRoom = true
+			switch readMessage.Type {
+			case "pv_message":
+				if ok := readMessage.PrivateMessageValidate(); !ok {
+					c.Disconnect()
+					break
 				}
-			}
-			// if clients are not in the same room
-			if !sameRoom {
-				c.Disconnect()
-				break
-			}
 
-			Manager.Broadcast <- readMessage
-
-		case "group_message":
-			if res := postDb.Table("group_users").Select("user_id").Where("group_room_id = ?", readMessage.RoomID).Pluck("user_id", &readMessage.Recipients); res.Error != nil {
-				c.Disconnect()
-				break
-			}
-			var sameRoom bool
-			//checking
-			for _, item := range readMessage.Recipients {
-				if item == c.Id {
-					//readMessage.Recipients = append(readMessage.Recipients[:index], readMessage.Recipients[index+1:]...)
-					sameRoom = true
+				if res := postDb.Table("pv_users").Select("user_id").Where("private_room_id = ?", readMessage.RoomID).Pluck("user_id", &readMessage.Recipients); res.Error != nil {
+					c.Disconnect()
+					break
 				}
+				var sameRoom bool
+				//checking
+				for _, item := range readMessage.Recipients {
+					if item == c.Id {
+						//readMessage.Recipients = append(readMessage.Recipients[:index], readMessage.Recipients[index+1:]...)
+						sameRoom = true
+					}
+				}
+				// if clients are not in the same room
+				if !sameRoom {
+					c.Disconnect()
+					break
+				}
+
+				Manager.Broadcast <- readMessage
+
+			case "group_message":
+				if res := postDb.Table("group_users").Select("user_id").Where("group_room_id = ?", readMessage.RoomID).Pluck("user_id", &readMessage.Recipients); res.Error != nil {
+					c.Disconnect()
+					break
+				}
+				var sameRoom bool
+				//checking
+				for _, item := range readMessage.Recipients {
+					if item == c.Id {
+						//readMessage.Recipients = append(readMessage.Recipients[:index], readMessage.Recipients[index+1:]...)
+						sameRoom = true
+					}
+				}
+				// if clients are not in the same room
+				if !sameRoom {
+					c.Disconnect()
+					break
+				}
+
+				Manager.Broadcast <- readMessage
+
+			default:
+				close(c.Send)
+				delete(Manager.Clients, c)
+
 			}
-			// if clients are not in the same room
-			if !sameRoom {
-				c.Disconnect()
-				break
-			}
-
-			Manager.Broadcast <- readMessage
-
-		default:
-			close(c.Send)
-			delete(Manager.Clients, c)
-
-		}
+		*/
 	}
-	/*/
+
 }
 func (c *Client) Write() {
 
