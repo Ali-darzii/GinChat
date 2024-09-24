@@ -254,6 +254,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/send-pv-message": {
+            "post": {
+                "description": "send private chat\n*send data in form-data !\nall users will receive data by websocket (same as api creator)\nso on success creator wil receive nil",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "send pv chat",
+                "parameters": [
+                    {
+                        "description": "Message body",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/serializer.PvMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)",
+                        "schema": {
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "We_Don't_Know_What_Happened(8)",
+                        "schema": {
+                            "$ref": "#/definitions/GinChat_utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/ws": {
             "post": {
                 "description": "Sends a chat message to a specific user or group\nit's websocket connection not http post method (swagger doesn't support ws documentation)\ntype is either pv_message or group_message",
@@ -471,6 +514,9 @@ const docTemplate = `{
                 "content": {
                     "type": "string"
                 },
+                "image": {
+                    "type": "string"
+                },
                 "room_id": {
                     "type": "integer"
                 },
@@ -648,6 +694,9 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "serializer.PvMessageRequest": {
+            "type": "object"
         }
     },
     "securityDefinitions": {

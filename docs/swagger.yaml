@@ -66,6 +66,8 @@ definitions:
     properties:
       content:
         type: string
+      image:
+        type: string
       room_id:
         type: integer
       sender:
@@ -184,6 +186,8 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  serializer.PvMessageRequest:
     type: object
 externalDocs:
   description: OpenAPI
@@ -366,6 +370,38 @@ paths:
           schema:
             $ref: '#/definitions/GinChat_utils.ErrorResponse'
       summary: make pv chat
+      tags:
+      - chat
+  /chat/send-pv-message:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        send private chat
+        *send data in form-data !
+        all users will receive data by websocket (same as api creator)
+        so on success creator wil receive nil
+      parameters:
+      - description: Message body
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/serializer.PvMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)
+          schema:
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
+        "500":
+          description: We_Don't_Know_What_Happened(8)
+          schema:
+            $ref: '#/definitions/GinChat_utils.ErrorResponse'
+      summary: send pv chat
       tags:
       - chat
   /chat/ws:
