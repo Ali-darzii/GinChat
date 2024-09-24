@@ -189,6 +189,19 @@ func (c chatAPI) MakeGroupChat(request *gin.Context) {
 	return
 }
 
+// @Summary send pv chat
+// @Description send private chat
+// @Description *send data in form-data !
+// @Description all users will receive data by websocket (same as api creator)
+// @Description so on success creator wil receive nil
+// @Tags chat
+// @Accept  json
+// @Produce  json
+// @Param   message  body  serializer.PvMessageRequest  true  "Message body"
+// @Success 201 {object}   nil
+// @Failure 400 {object}   utils.ErrorResponse "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)"
+// @Failure 500 {object}   utils.ErrorResponse "We_Don't_Know_What_Happened(8)"
+// @Router /chat/send-pv-message [post]
 func (c chatAPI) SendPvMessage(request *gin.Context) {
 	var pvMessageRequest serializer.PvMessageRequest
 	if err := request.ShouldBindWith(&pvMessageRequest, binding.FormMultipart); err != nil {
@@ -207,7 +220,15 @@ func (c chatAPI) SendPvMessage(request *gin.Context) {
 	}
 	message, err := c.service.SendPvMessage(pvMessageRequest, userPhoneNo.(string))
 	if err != nil {
-		request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
+		if err.Error() == "bad_format" {
+			request.JSON(http.StatusBadRequest, utils.BadFormat)
+			return
+		}
+		if err.Error() == "room_id_issue" {
+			request.JSON(http.StatusBadRequest, utils.ObjectNotFound)
+			return
+		}
+		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
 		return
 	}
 	if pvMessageRequest.Image != nil {
@@ -217,7 +238,6 @@ func (c chatAPI) SendPvMessage(request *gin.Context) {
 			return
 		}
 	}
-
 	websocketHandler.Manager.Broadcast <- message
 
 	request.JSON(http.StatusOK, nil)
