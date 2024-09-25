@@ -15,7 +15,7 @@ var ctx = context.Background()
 type ChatRepository interface {
 	FindByPhone(string) (uint, error)
 	GetAllRooms(uint) ([]serializer.Room, error)
-	MakePvChat(serializer.MakeNewChatRequest, uint) (serializer.Message, error)
+	MakePvChat(entity.PrivateRoom, entity.PrivateMessageRoom) (entity.PrivateMessageRoom, error)
 	MakeGroupChat(entity.GroupRoom) (entity.GroupRoom, error)
 	SendPvMessage(entity.PrivateMessageRoom) ([]uint, error)
 	SendGpMessage(entity.GroupMessageRoom) ([]uint, error)
@@ -113,27 +113,16 @@ func (c chatRepository) GetAllRooms(userId uint) ([]serializer.Room, error) {
 
 	return allRooms, nil
 }
-func (c chatRepository) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest, userId uint) (serializer.Message, error) {
-	var message serializer.Message
-	privateRoom := entity.PrivateRoom{
-		Users: []entity.User{
-			{ID: userId},
-			{ID: makeNewChatRequest.RecipientID},
-		},
-	}
+func (c chatRepository) MakePvChat(privateRoom entity.PrivateRoom, privateMessage entity.PrivateMessageRoom) (entity.PrivateMessageRoom, error) {
 	if res := c.postgresConn.Create(&privateRoom); res.Error != nil {
-		return message, res.Error
+		return privateMessage, res.Error
 	}
-	message = serializer.Message{
-		Type:       "new_pv_message",
-		RoomID:     privateRoom.ID,
-		Sender:     userId,
-		Content:    makeNewChatRequest.Content,
-		Recipients: []uint{makeNewChatRequest.RecipientID},
+	privateMessage.PrivateID = privateRoom.ID
+	if res := c.postgresConn.Save(&privateMessage); res.Error != nil {
+		return privateMessage, res.Error
 	}
-	//websocketHandler.Manager.Broadcast <- message
 
-	return message, nil
+	return privateMessage, nil
 }
 func (c chatRepository) MakeGroupChat(groupRoom entity.GroupRoom) (entity.GroupRoom, error) {
 	if res := c.postgresConn.Save(&groupRoom); res.Error != nil {

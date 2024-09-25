@@ -6,11 +6,12 @@ import (
 	"GinChat/serializer"
 	"GinChat/utils"
 	"errors"
+	"path/filepath"
 )
 
 type ChatService interface {
 	GetAllRooms(string) ([]serializer.Room, error)
-	MakePvChat(serializer.MakeNewChatRequest, string) (serializer.Message, error)
+	MakePvChat(serializer.MakeNewChatRequest, string) (serializer.MessageV2, error)
 	MakeGroupChat(serializer.MakeGroupChatRequest, string) (serializer.Message, error)
 	SendPvMessage(serializer.MessageRequest, string) (serializer.MessageV2, error)
 	SendGpMessage(serializer.MessageRequest, string) (serializer.MessageV2, error)
@@ -34,15 +35,49 @@ func (c chatService) GetAllRooms(phoneNo string) ([]serializer.Room, error) {
 	}
 	return usersInSameRoom, nil
 }
-func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest, phoneNo string) (serializer.Message, error) {
+
+func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest, phoneNo string) (serializer.MessageV2, error) {
 	userId, err := c.chatRepository.FindByPhone(phoneNo)
+	var message serializer.MessageV2
 	if err != nil {
-		return serializer.Message{}, err
+		return message, err
 	}
-	message, err := c.chatRepository.MakePvChat(makeNewChatRequest, userId)
+	var imagePath string
+	if makeNewChatRequest.File != nil {
+		ext := filepath.Ext(makeNewChatRequest.File.Filename)
+		if ext != "mp3" {
+			if ok := utils.ImageValidate(makeNewChatRequest.File); !ok {
+				return message, errors.New("bad_format")
+			}
+		}
+		imagePath = "assets/uploads/pvMessage/"
+		imagePath = utils.FilePathController(imagePath, makeNewChatRequest.File.Filename)
+
+	}
+
+	privateRoom := entity.PrivateRoom{
+		Users: []entity.User{
+			{ID: userId},
+			{ID: makeNewChatRequest.RecipientID},
+		},
+	}
+	privateChat := entity.PrivateMessageRoom{
+		Sender: userId,
+		Body:   &makeNewChatRequest.Content,
+		File:   &imagePath,
+	}
+
+	privateChat, err = c.chatRepository.MakePvChat(privateRoom, privateChat)
 	if err != nil {
-		return serializer.Message{}, err
+		return message, err
 	}
+	message.PvMessage.Type = "new_pv_chat"
+	message.PvMessage.File = imagePath
+	message.PvMessage.RoomID = privateChat.PrivateID
+	message.PvMessage.Sender = userId
+	message.PvMessage.Content = *privateChat.Body
+	message.Recipients = []uint{userId, makeNewChatRequest.RecipientID}
+
 	return message, nil
 }
 func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChatRequest, phoneNo string) (serializer.Message, error) {
@@ -57,7 +92,7 @@ func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChat
 			return serializer.Message{}, errors.New("bad_format")
 		}
 		imagePath = "assets/uploads/groupAvatar/"
-		imagePath = utils.ImagePathController(imagePath, makeGroupChatRequest.Avatar.Filename)
+		imagePath = utils.FilePathController(imagePath, makeGroupChatRequest.Avatar.Filename)
 	}
 	groupRoom := entity.GroupRoom{
 		Avatar: &imagePath,
@@ -96,19 +131,23 @@ func (c chatService) SendPvMessage(pvMessage serializer.MessageRequest, phoneNo 
 	}
 
 	var imagePath string
-	if pvMessage.Image != nil {
-		if ok := utils.ImageValidate(pvMessage.Image); !ok {
-			return message, errors.New("bad_format")
+	if pvMessage.File != nil {
+		ext := filepath.Ext(pvMessage.File.Filename)
+		if ext != "mp3" {
+			if ok := utils.ImageValidate(pvMessage.File); !ok {
+				return message, errors.New("bad_format")
+			}
 		}
 		imagePath = "assets/uploads/pvMessage/"
-		imagePath = utils.ImagePathController(imagePath, pvMessage.Image.Filename)
+		imagePath = utils.FilePathController(imagePath, pvMessage.File.Filename)
+
 	}
 
 	privateMessage := entity.PrivateMessageRoom{
 		PrivateID: pvMessage.RoomID,
 		Sender:    userId,
 		Body:      &pvMessage.Content,
-		Image:     &imagePath,
+		File:      &imagePath,
 	}
 	recipientsId, err := c.chatRepository.SendPvMessage(privateMessage)
 	if err != nil {
@@ -125,7 +164,7 @@ func (c chatService) SendPvMessage(pvMessage serializer.MessageRequest, phoneNo 
 	}
 
 	message.PvMessage.Type = "pv_message"
-	message.PvMessage.Image = imagePath
+	message.PvMessage.File = imagePath
 	message.PvMessage.RoomID = pvMessage.RoomID
 	message.PvMessage.Sender = userId
 	message.PvMessage.Content = pvMessage.Content
@@ -142,12 +181,16 @@ func (c chatService) SendGpMessage(gpMessage serializer.MessageRequest, phoneNo 
 	}
 
 	var imagePath string
-	if gpMessage.Image != nil {
-		if ok := utils.ImageValidate(gpMessage.Image); !ok {
-			return message, errors.New("bad_format")
+	if gpMessage.File != nil {
+		ext := filepath.Ext(gpMessage.File.Filename)
+		if ext != "mp3" {
+			if ok := utils.ImageValidate(gpMessage.File); !ok {
+				return message, errors.New("bad_format")
+			}
 		}
 		imagePath = "assets/uploads/pvMessage/"
-		imagePath = utils.ImagePathController(imagePath, gpMessage.Image.Filename)
+		imagePath = utils.FilePathController(imagePath, gpMessage.File.Filename)
+
 	}
 	groupMessage := entity.GroupMessageRoom{
 		GroupID: gpMessage.RoomID,
@@ -169,7 +212,7 @@ func (c chatService) SendGpMessage(gpMessage serializer.MessageRequest, phoneNo 
 		return message, errors.New("room_id_issue")
 	}
 	message.PvMessage.Type = "gp_message"
-	message.PvMessage.Image = imagePath
+	message.PvMessage.File = imagePath
 	message.PvMessage.RoomID = gpMessage.RoomID
 	message.PvMessage.Sender = userId
 	message.PvMessage.Content = gpMessage.Content

@@ -109,6 +109,7 @@ func (c chatAPI) GetAllRooms(request *gin.Context) {
 	request.JSON(http.StatusOK, usersInSameRoom)
 }
 
+// todo:need test
 // @Summary make pv chat
 // @Description create private chat
 // @Description you need to send 1 message too to create private chat
@@ -122,7 +123,7 @@ func (c chatAPI) GetAllRooms(request *gin.Context) {
 // @Router /chat/make-private [post]
 func (c chatAPI) MakePvChat(request *gin.Context) {
 	var makeNewChatRequest serializer.MakeNewChatRequest
-	if err := request.ShouldBind(&makeNewChatRequest); err != nil {
+	if err := request.ShouldBindWith(&makeNewChatRequest, binding.FormMultipart); err != nil {
 		request.JSON(http.StatusBadRequest, utils.BadFormat)
 	}
 
@@ -134,10 +135,23 @@ func (c chatAPI) MakePvChat(request *gin.Context) {
 
 	message, err := c.service.MakePvChat(makeNewChatRequest, userPhoneNo.(string))
 	if err != nil {
+		if err.Error() == "bad_format" {
+			request.JSON(http.StatusBadRequest, utils.BadFormat)
+			return
+		}
 		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
 		return
 	}
-	request.JSON(http.StatusCreated, message)
+	if makeNewChatRequest.File != nil {
+		makeNewChatRequest.File.Filename = message.PvMessage.File[25:]
+		if err = request.SaveUploadedFile(makeNewChatRequest.File, "assets/uploads/pvMessage/"+makeNewChatRequest.File.Filename); err != nil {
+			request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
+			return
+		}
+	}
+	websocketHandler.Manager.Broadcast <- message
+
+	request.JSON(http.StatusOK, nil)
 	return
 
 }
@@ -232,9 +246,9 @@ func (c chatAPI) SendPvMessage(request *gin.Context) {
 		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
 		return
 	}
-	if pvMessageRequest.Image != nil {
-		pvMessageRequest.Image.Filename = message.PvMessage.Image[25:]
-		if err = request.SaveUploadedFile(pvMessageRequest.Image, "assets/uploads/pvMessage/"+pvMessageRequest.Image.Filename); err != nil {
+	if pvMessageRequest.File != nil {
+		pvMessageRequest.File.Filename = message.PvMessage.File[25:]
+		if err = request.SaveUploadedFile(pvMessageRequest.File, "assets/uploads/pvMessage/"+pvMessageRequest.File.Filename); err != nil {
 			request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
 			return
 		}
@@ -274,9 +288,9 @@ func (c chatAPI) SendGpMessage(request *gin.Context) {
 		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
 		return
 	}
-	if gpMessageRequest.Image != nil {
-		gpMessageRequest.Image.Filename = message.PvMessage.Image[25:]
-		if err = request.SaveUploadedFile(gpMessageRequest.Image, "assets/uploads/gpMessage/"+gpMessageRequest.Image.Filename); err != nil {
+	if gpMessageRequest.File != nil {
+		gpMessageRequest.File.Filename = message.PvMessage.File[25:]
+		if err = request.SaveUploadedFile(gpMessageRequest.File, "assets/uploads/gpMessage/"+gpMessageRequest.File.Filename); err != nil {
 			request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
 			return
 		}

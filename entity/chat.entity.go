@@ -14,7 +14,7 @@ type PrivateMessageRoom struct {
 	PrivateID uint      `gorm:"NOT NULL" json:"private_id"`
 	Sender    uint      `gorm:"NOT NULL" json:"sender"`
 	Body      *string   `gorm:"type:text;NULL" json:"body"`
-	Image     *string   `gorm:"type:varchar(100);NULL" json:"image"`
+	File      *string   `gorm:"type:varchar(100);NULL" json:"image"`
 	Timestamp time.Time `gorm:"default:current_timestamp" json:"timestamp"`
 }
 
@@ -33,6 +33,6 @@ type GroupMessageRoom struct {
 	GroupID   uint      `gorm:"NOT NULL" json:"group_id"`
 	Sender    uint      `gorm:"NOT NULL" json:"sender"`
 	Body      *string   `gorm:"type:text;NULL" json:"body"`
-	Image     *string   `gorm:"type:varchar(100);NULL" json:"image"`
+	File      *string   `gorm:"type:varchar(100);NULL" json:"image"`
 	TimeStamp time.Time `json:"timestamp"`
 }

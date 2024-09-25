@@ -2,6 +2,7 @@ package serializer
 
 import (
 	"mime/multipart"
+	"path/filepath"
 	"time"
 )
 
@@ -46,7 +47,7 @@ type SendPvMessage struct {
 	RoomID    uint      `json:"room_id" binding:"required"`
 	Content   string    `json:"content,omitempty" binding:"required"`
 	Sender    uint      `json:"sender"`
-	Image     string    `json:"image"`
+	File      string    `json:"file"`
 	TimeStamp time.Time `json:"timestamp"`
 }
 
@@ -69,8 +70,9 @@ type PaginationRequest struct {
 }
 
 type MakeNewChatRequest struct {
-	RecipientID uint   `binding:"required,min=1" json:"recipient_id"`
-	Content     string `binding:"required" json:"content"`
+	RecipientID uint                  `binding:"required,min=1" json:"recipient_id" format:"recipient_id"`
+	Content     string                `binding:"required" json:"content" format:"content"`
+	File        *multipart.FileHeader `json:"file" format:"file"`
 }
 
 type UserInGpRoom struct {
@@ -101,13 +103,16 @@ type Room struct {
 type MessageRequest struct {
 	RoomID  uint                  `json:"room_id" binding:"required" form:"room_id"`
 	Content string                `json:"content,omitempty" form:"content"`
-	Image   *multipart.FileHeader `json:"image" form:"image"`
+	File    *multipart.FileHeader `json:"file" form:"image"`
 }
 
-// either we should have content or image or both
+// either we should have content or File(image) if there is voice u can't send voice
 func (p *MessageRequest) PvMessageValidate() bool {
-
-	if p.Content == "" && p.Image == nil {
+	ext := filepath.Ext(p.File.Filename)
+	if ext == "mp3" && p.Content != "" {
+		return false
+	}
+	if p.Content == "" && p.File == nil {
 		return false
 	}
 	return true
