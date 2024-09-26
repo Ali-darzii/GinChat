@@ -15,7 +15,7 @@ func ConnectRedis() *redis.Client {
 		panic("Failed to load .env file")
 	}
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "redis:" + os.Getenv("RedisPort"),
+		Addr:     os.Getenv("RedisHost") + ":" + os.Getenv("RedisPort"),
 		Password: os.Getenv("RedisPass"),
 		DB:       1,
 	})

@@ -11,10 +11,10 @@ import (
 
 type ChatService interface {
 	GetAllRooms(string) ([]serializer.Room, error)
-	MakePvChat(serializer.MakeNewChatRequest, string) (serializer.MessageV2, error)
+	MakePvChat(serializer.MakeNewChatRequest, string) (serializer.Message, error)
 	MakeGroupChat(serializer.MakeGroupChatRequest, string) (serializer.Message, error)
-	SendPvMessage(serializer.MessageRequest, string) (serializer.MessageV2, error)
-	SendGpMessage(serializer.MessageRequest, string) (serializer.MessageV2, error)
+	SendPvMessage(serializer.MessageRequest, string) (serializer.Message, error)
+	SendGpMessage(serializer.MessageRequest, string) (serializer.Message, error)
 }
 
 type chatService struct {
@@ -35,10 +35,9 @@ func (c chatService) GetAllRooms(phoneNo string) ([]serializer.Room, error) {
 	}
 	return usersInSameRoom, nil
 }
-
-func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest, phoneNo string) (serializer.MessageV2, error) {
+func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest, phoneNo string) (serializer.Message, error) {
 	userId, err := c.chatRepository.FindByPhone(phoneNo)
-	var message serializer.MessageV2
+	var message serializer.Message
 	if err != nil {
 		return message, err
 	}
@@ -81,14 +80,14 @@ func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest
 }
 func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChatRequest, phoneNo string) (serializer.Message, error) {
 	userId, err := c.chatRepository.FindByPhone(phoneNo)
-
+	var message serializer.Message
 	if err != nil {
-		return serializer.Message{}, err
+		return message, err
 	}
 	var imagePath string
 	if makeGroupChatRequest.Avatar != nil {
 		if ok := utils.ImageValidate(makeGroupChatRequest.Avatar); !ok {
-			return serializer.Message{}, errors.New("bad_format")
+			return message, errors.New("bad_format")
 		}
 		imagePath = "assets/uploads/groupAvatar/"
 		imagePath = utils.FilePathController(imagePath, makeGroupChatRequest.Avatar.Filename)
@@ -106,25 +105,21 @@ func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChat
 
 	groupRoom, err = c.chatRepository.MakeGroupChat(groupRoom)
 	if err != nil {
-		return serializer.Message{}, err
+		return message, err
 	}
 
-	message := serializer.Message{
-		Type:       "new_group_message",
-		Avatar:     imagePath,
-		RoomID:     groupRoom.ID,
-		Sender:     userId,
-		Recipients: append(makeGroupChatRequest.Recipients, userId),
-	}
-
-	//websocketHandler.Manager.Broadcast <- message, moved to api
+	message.Avatar = imagePath
+	message.Recipients = append(makeGroupChatRequest.Recipients, userId)
+	message.PvMessage.Type = "new_gp_message"
+	message.PvMessage.RoomID = groupRoom.ID
+	message.PvMessage.Sender = userId
 
 	return message, nil
 
 }
-func (c chatService) SendPvMessage(pvMessage serializer.MessageRequest, phoneNo string) (serializer.MessageV2, error) {
+func (c chatService) SendPvMessage(pvMessage serializer.MessageRequest, phoneNo string) (serializer.Message, error) {
 	userId, err := c.chatRepository.FindByPhone(phoneNo)
-	var message serializer.MessageV2
+	var message serializer.Message
 	if err != nil {
 		return message, err
 	}
@@ -172,9 +167,9 @@ func (c chatService) SendPvMessage(pvMessage serializer.MessageRequest, phoneNo 
 	return message, nil
 
 }
-func (c chatService) SendGpMessage(gpMessage serializer.MessageRequest, phoneNo string) (serializer.MessageV2, error) {
+func (c chatService) SendGpMessage(gpMessage serializer.MessageRequest, phoneNo string) (serializer.Message, error) {
 	userId, err := c.chatRepository.FindByPhone(phoneNo)
-	var message serializer.MessageV2
+	var message serializer.Message
 	if err != nil {
 		return message, err
 	}

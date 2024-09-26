@@ -176,7 +176,7 @@ func (c chatAPI) MakePvChat(request *gin.Context) {
 func (c chatAPI) MakeGroupChat(request *gin.Context) {
 	phoneNo, ok := request.Get("phoneNo")
 	if !ok {
-		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
 		return
 	}
 	var makeChatRequest serializer.MakeGroupChatRequest
@@ -202,8 +202,7 @@ func (c chatAPI) MakeGroupChat(request *gin.Context) {
 		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
 		return
 	}
-	//NEED UPDATE BECAUSE OF SERIALIZER and METHOD CHANGING !!!!!!
-	//websocketHandler.Manager.Broadcast <- message
+	websocketHandler.Manager.Broadcast <- message
 	request.JSON(http.StatusCreated, nil)
 	return
 }

@@ -13,30 +13,6 @@ type ServerMessage struct {
 }
 
 type Message struct {
-	Type       string `json:"type" binding:"required"`
-	Avatar     string `json:"avatar"`
-	RoomID     uint   `json:"room_id" binding:"required"`
-	Content    string `json:"content,omitempty" binding:"required"`
-	Image      string `json:"image"`
-	Sender     uint   `json:"sender"`
-	Recipients []uint `json:"recipients"`
-}
-
-func (c Message) PrivateMessageValidate() bool {
-	if c.RoomID == 0 {
-		return false
-	}
-	return true
-}
-func (c Message) NewPrivateMessageValidate() bool {
-	if c.Recipients[0] == 0 {
-		return false
-	}
-
-	return true
-}
-
-type MessageV2 struct {
 	Avatar     string `json:"avatar"`
 	Recipients []uint `json:"recipients"`
 	PvMessage  SendPvMessage
@@ -49,13 +25,6 @@ type SendPvMessage struct {
 	Sender    uint      `json:"sender"`
 	File      string    `json:"file"`
 	TimeStamp time.Time `json:"timestamp"`
-}
-
-type NewGroupChat struct {
-	Avatar  string `json:"avatar" form:"avatar"`
-	Type    string `json:"type"`
-	RoomID  uint   `json:"room_id"`
-	Members []uint `json:"members"`
 }
 
 type MakeGroupChatRequest struct {

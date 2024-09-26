@@ -141,7 +141,7 @@ func (c chatRepository) MakeGroupChat(groupRoom entity.GroupRoom) (entity.GroupR
 	if res := c.postgresConn.Save(&groupRoom); res.Error != nil {
 		return entity.GroupRoom{}, res.Error
 	}
-
+	
 	return groupRoom, nil
 
 }

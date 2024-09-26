@@ -15,7 +15,7 @@ type Client struct {
 }
 type ClientManager struct {
 	Clients    map[*Client]bool
-	Broadcast  chan serializer.MessageV2
+	Broadcast  chan serializer.Message
 	Register   chan *Client
 	Unregister chan *Client
 }
@@ -25,7 +25,7 @@ var (
 
 	// in memory system
 	Manager = ClientManager{
-		Broadcast:  make(chan serializer.MessageV2),
+		Broadcast:  make(chan serializer.Message),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		Clients:    make(map[*Client]bool),
@@ -49,46 +49,7 @@ func (manager *ClientManager) Start() {
 			}
 		//broadcast
 		case message := <-manager.Broadcast:
-			var jsonMessage []byte
-
-			switch message.PvMessage.Type {
-			// because u need a send message to create a pv_message --> pv_message and new_pv_message are same
-			case "pv_message", "new_pv_message":
-				jsonMessage, _ = json.Marshal(&message.PvMessage)
-			case "gp_message":
-				jsonMessage, _ = json.Marshal(&message.PvMessage)
-				//NEED UPDATE BECAUSE OF SERIALIZER and METHOD CHANGING !!!!!!
-				/*/
-				case "group_message":
-					groupMessage := entity.GroupMessageRoom{
-						Sender:  message.Sender,
-						GroupID: message.RoomID,
-						Body:    &message.Content,
-					}
-					if res := postDb.Save(&groupMessage); res.Error != nil {
-						jsonMessage, _ = json.Marshal(&serializer.ServerMessage{Content: "can't save message in db", RoomID: message.RoomID, Status: false})
-						message.Recipients = []uint{message.Sender}
-					} else {
-						gpMessage := serializer.SendPvMessage{
-							Type:      message.Type,
-							RoomID:    message.RoomID,
-							Content:   message.Content,
-							Sender:    message.Sender,
-							TimeStamp: groupMessage.TimeStamp,
-						}
-						jsonMessage, _ = json.Marshal(&gpMessage)
-					}
-
-				case "new_group_message":
-					gpMessage := serializer.NewGroupChat{
-						Avatar:  message.Avatar,
-						Type:    message.Type,
-						RoomID:  message.RoomID,
-						Members: message.Recipients,
-					}
-					jsonMessage, _ = json.Marshal(&gpMessage)
-				/*/
-			}
+			jsonMessage, _ := json.Marshal(&message.PvMessage)
 
 			for _, item := range message.Recipients {
 				for client := range manager.Clients {
