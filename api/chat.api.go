@@ -105,6 +105,7 @@ func (c chatAPI) GetAllRooms(request *gin.Context) {
 	request.JSON(http.StatusOK, usersInSameRoom)
 }
 
+// todo: send multi image
 // @Summary make pv chat
 // @Description create private chat
 // @Description send data in form-data
@@ -124,7 +125,6 @@ func (c chatAPI) MakePvChat(request *gin.Context) {
 		request.JSON(http.StatusBadRequest, utils.BadFormat)
 		return
 	}
-
 	userPhoneNo, ok := request.Get("phoneNo")
 	if !ok {
 		request.JSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
