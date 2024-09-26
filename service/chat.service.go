@@ -52,7 +52,6 @@ func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest
 		}
 		imagePath = "assets/uploads/pvMessage/"
 		imagePath = utils.FilePathController(imagePath, makeNewChatRequest.File.Filename)
-
 	}
 
 	privateRoom := entity.PrivateRoom{
@@ -71,7 +70,7 @@ func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest
 	if err != nil {
 		return message, err
 	}
-	message.PvMessage.Type = "new_pv_chat"
+	message.PvMessage.Type = "new_pv_message"
 	message.PvMessage.File = imagePath
 	message.PvMessage.RoomID = privateChat.PrivateID
 	message.PvMessage.Sender = userId
@@ -196,7 +195,7 @@ func (c chatService) SendGpMessage(gpMessage serializer.MessageRequest, phoneNo 
 		GroupID: gpMessage.RoomID,
 		Sender:  userId,
 		Body:    &gpMessage.Content,
-		Image:   &imagePath,
+		File:    &imagePath,
 	}
 	recipientsId, err := c.chatRepository.SendGpMessage(groupMessage)
 	if err != nil {

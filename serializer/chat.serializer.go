@@ -70,9 +70,20 @@ type PaginationRequest struct {
 }
 
 type MakeNewChatRequest struct {
-	RecipientID uint                  `binding:"required,min=1" json:"recipient_id" format:"recipient_id"`
-	Content     string                `binding:"required" json:"content" format:"content"`
-	File        *multipart.FileHeader `json:"file" format:"file"`
+	RecipientID uint                  `binding:"required,min=1" json:"recipient_id" form:"recipient_id"`
+	Content     string                `json:"content" form:"content"`
+	File        *multipart.FileHeader `json:"file" form:"file"`
+}
+
+func (m *MakeNewChatRequest) PvMessageValidate() bool {
+	ext := filepath.Ext(m.File.Filename)
+	if ext == "mp3" && m.Content != "" {
+		return false
+	}
+	if m.Content == "" && m.File == nil {
+		return false
+	}
+	return true
 }
 
 type UserInGpRoom struct {
@@ -107,12 +118,12 @@ type MessageRequest struct {
 }
 
 // either we should have content or File(image) if there is voice u can't send voice
-func (p *MessageRequest) PvMessageValidate() bool {
-	ext := filepath.Ext(p.File.Filename)
-	if ext == "mp3" && p.Content != "" {
+func (m *MessageRequest) PvMessageValidate() bool {
+	ext := filepath.Ext(m.File.Filename)
+	if ext == "mp3" && m.Content != "" {
 		return false
 	}
-	if p.Content == "" && p.File == nil {
+	if m.Content == "" && m.File == nil {
 		return false
 	}
 	return true

@@ -109,7 +109,6 @@ func (c chatAPI) GetAllRooms(request *gin.Context) {
 	request.JSON(http.StatusOK, usersInSameRoom)
 }
 
-// todo:need test
 // @Summary make pv chat
 // @Description create private chat
 // @Description you need to send 1 message too to create private chat
@@ -125,6 +124,7 @@ func (c chatAPI) MakePvChat(request *gin.Context) {
 	var makeNewChatRequest serializer.MakeNewChatRequest
 	if err := request.ShouldBindWith(&makeNewChatRequest, binding.FormMultipart); err != nil {
 		request.JSON(http.StatusBadRequest, utils.BadFormat)
+		return
 	}
 
 	userPhoneNo, ok := request.Get("phoneNo")
@@ -137,6 +137,10 @@ func (c chatAPI) MakePvChat(request *gin.Context) {
 	if err != nil {
 		if err.Error() == "bad_format" {
 			request.JSON(http.StatusBadRequest, utils.BadFormat)
+			return
+		}
+		if err.Error() == "room_exist" {
+			request.JSON(http.StatusBadRequest, utils.RoomFieldIssue)
 			return
 		}
 		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)

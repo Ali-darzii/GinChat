@@ -94,4 +94,9 @@ var (
 		ErrorCode: 12,
 		Detail:    "Name_Field_Required_For_Register",
 	}
+	RoomFieldIssue = ErrorResponse{
+		Status:    false,
+		ErrorCode: 13,
+		Detail:    "Room_Id_Have_Issue_In_Db",
+	}
 )

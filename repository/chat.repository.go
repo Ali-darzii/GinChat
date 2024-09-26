@@ -114,7 +114,20 @@ func (c chatRepository) GetAllRooms(userId uint) ([]serializer.Room, error) {
 	return allRooms, nil
 }
 func (c chatRepository) MakePvChat(privateRoom entity.PrivateRoom, privateMessage entity.PrivateMessageRoom) (entity.PrivateMessageRoom, error) {
-	if res := c.postgresConn.Create(&privateRoom); res.Error != nil {
+	// check users have no pv room together
+	var count int64
+	res := c.postgresConn.Table("pv_users as u1").
+		Select("COUNT(DISTINCT u1.private_room_id)").
+		Joins("JOIN pv_users as u2 ON u1.private_room_id = u2.private_room_id").
+		Where("u1.user_id = ? AND u2.user_id = ?", privateRoom.Users[0].ID, privateRoom.Users[1].ID).
+		Count(&count)
+	if res.Error != nil {
+		return privateMessage, res.Error
+	}
+	if count > 0 {
+		return privateMessage, errors.New("room_exist")
+	}
+	if res := c.postgresConn.Save(&privateRoom); res.Error != nil {
 		return privateMessage, res.Error
 	}
 	privateMessage.PrivateID = privateRoom.ID
