@@ -7,7 +7,7 @@
 
 > A real-time chat application built using the Gin framework (Go), PostgreSQL, and Redis.
 
-GinChat is a simple and efficient real-time chat service leveraging the Go Gin web framework, Redis for message caching, and PostgreSQL as the database. The application is containerized using Docker for easy deployment.
+GinChat is a web chat and efficient real-time chat service leveraging the Go Gin web framework, Redis for message caching, and PostgreSQL as the database. The application is containerized using Docker for easy deployment.
 
 ## Table of Contents
 - [Features](#features)
@@ -24,7 +24,8 @@ GinChat is a simple and efficient real-time chat service leveraging the Go Gin w
 ---
 
 ## Features
-- ❤️ **Technologies in Use**: Gorilla WebSocket, GORM, Swagger, Goroutines, JWT, OTP, microservice architecture.
+- ❤️ **Technologies in Use**: Gorilla WebSocket, GORM, Swagger, concurrency, JWT, OTP, microservice architecture.
+- 💬 **Chat Features**: Safe and private chats where you can send text, images, and voice messages.
 - 🟢 **Real-Time Communication**: Enables instant messaging with Redis.
 - ⚡ **Gin Framework**: Lightweight and high-performance Go framework.
 - 🔐 **Authentication**: Secure user authentication with JWT and OTP via phone numbers.
@@ -64,5 +65,5 @@ GinChat is a simple and efficient real-time chat service leveraging the Go Gin w
     ```bash
    docker-compose up -d --build
 
-5. **For API Endpoints check:**
+5. **For API Endpoints check :**
    [Swagger Documentation](http://127.0.0.1:8080/swagger/index.html)
