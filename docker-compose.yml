@@ -42,7 +42,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: [ "go", "run", "/app/main.go" ]
+    command: [ "go", "run", "/app/cmd/main.go" ]
     ports:
       - "8080:8080"
     env_file:

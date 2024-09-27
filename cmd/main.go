@@ -1,8 +1,6 @@
 package main
 
-import (
-	"GinChat/routes"
-)
+import "GinChat/routes"
 
 // @title           Swagger Example API
 // @version         1.0
