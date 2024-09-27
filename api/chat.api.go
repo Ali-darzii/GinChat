@@ -108,14 +108,14 @@ func (c chatAPI) GetAllRooms(request *gin.Context) {
 // todo: send multi image
 // @Summary make pv chat
 // @Description create private chat
-// @Description send data in form-data
+// @Description *send data in form-data because of file !!
 // @Description you need to send 1 message too to create private chat
 // @Description you will receive message in ws !
 // @Description so on success creator wil receive nil
 // @Tags chat
 // @Accept  multipart/form-data
 // @Produce  json
-// @Param   message  body  serializer.MakeNewChatRequest  true  "Message body"
+// @Param   message  body  utils.DummyMakeNewChatRequest  true  "Message body"
 // @Success 201 {object}   nil "you're recipient going to receive the response from ws !"
 // @Failure 400 {object}   utils.ErrorResponse "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5) | We_Don't_Know_What_Happened(8)| RoomFieldIssue(13)"
 // @Router /chat/make-private [post]
@@ -206,13 +206,13 @@ func (c chatAPI) MakeGroupChat(request *gin.Context) {
 
 // @Summary send pv message
 // @Description send private message
-// @Description *send data in form-data !
+// @Description *send data in form-data because of file !!
 // @Description all users will receive data by websocket (same as api creator)
 // @Description so on success creator wil receive nil
 // @Tags chat
 // @Accept  multipart/form-data
 // @Produce  json
-// @Param   message  body  serializer.MessageRequest  true  "Message body"
+// @Param   message  body  utils.DummyMessageRequest  true  "Message body"
 // @Success 201 {object}   nil
 // @Failure 400 {object}   utils.ErrorResponse "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)"
 // @Failure 500 {object}   utils.ErrorResponse "We_Don't_Know_What_Happened(8)"
@@ -261,16 +261,17 @@ func (c chatAPI) SendPvMessage(request *gin.Context) {
 
 // @Summary send gp message
 // @Description send group message
-// @Description *send data in form-data !
+// @Description *send data in form-data because of file !!
 // @Description all users will receive data by websocket (same as api creator)
 // @Description so on success creator wil receive nil
 // @Tags chat
-// @Accept  multipart/form-data
+// @Accept  json
 // @Produce  json
-// @Param   message  body  serializer.MessageRequest  true  "Message body"
+// @Param   message  body  utils.DummyMessageRequest  true  "Message body"
 // @Success 201 {object}   nil
 // @Failure 400 {object}   utils.ErrorResponse "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)"
 // @Failure 500 {object}   utils.ErrorResponse "We_Don't_Know_What_Happened(8)"
+// @Router /chat/send-gp-message [post]
 func (c chatAPI) SendGpMessage(request *gin.Context) {
 	var gpMessageRequest serializer.MessageRequest
 	if err := request.ShouldBindWith(&gpMessageRequest, binding.FormMultipart); err != nil {

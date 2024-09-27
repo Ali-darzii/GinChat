@@ -22,10 +22,20 @@ type DummyMakeGroupChat struct {
 	Recipients []uint `binding:"required" json:"recipients_id"`
 }
 type DummyProfileUpdate struct {
-	ID       uint   `json:"id" form:"id"`
+	ID       uint   `json:"id"`
 	Avatar   string `json:"avatar" form:"avatar"`
-	Name     string `binding:"required,name_validator" json:"name" form:"name"`
-	Username string `json:"username" form:"username"`
+	Name     string `binding:"required" json:"name"`
+	Username string `json:"username"`
+}
+type DummyMakeNewChatRequest struct {
+	RecipientID uint   `binding:"required,min=1" json:"recipient_id"`
+	Content     string `json:"content"`
+	File        string `json:"file"`
+}
+type DummyMessageRequest struct {
+	RoomID  uint   `json:"room_id" binding:"required"`
+	Content string `json:"content"`
+	File    string `json:"file"`
 }
 
 var (

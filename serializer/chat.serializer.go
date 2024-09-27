@@ -82,7 +82,7 @@ type Room struct {
 
 type MessageRequest struct {
 	RoomID  uint                  `json:"room_id" binding:"required" form:"room_id"`
-	Content string                `json:"content,omitempty" form:"content"`
+	Content string                `json:"content" form:"content"`
 	File    *multipart.FileHeader `json:"file" form:"image"`
 }
 

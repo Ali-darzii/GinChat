@@ -25,10 +25,6 @@ definitions:
     - phone_no
     - token
     type: object
-  serializer.MakeNewChatRequest:
-    type: object
-  serializer.MessageRequest:
-    type: object
   serializer.ProfileAPI:
     properties:
       avatar:
@@ -119,6 +115,29 @@ definitions:
     required:
     - name
     - recipients_id
+    type: object
+  utils.DummyMakeNewChatRequest:
+    properties:
+      content:
+        type: string
+      file:
+        type: string
+      recipient_id:
+        minimum: 1
+        type: integer
+    required:
+    - recipient_id
+    type: object
+  utils.DummyMessageRequest:
+    properties:
+      content:
+        type: string
+      file:
+        type: string
+      room_id:
+        type: integer
+    required:
+    - room_id
     type: object
   utils.DummyProfileUpdate:
     properties:
@@ -308,7 +327,7 @@ paths:
       - multipart/form-data
       description: |-
         create private chat
-        send data in form-data
+        *send data in form-data because of file !!
         you need to send 1 message too to create private chat
         you will receive message in ws !
         so on success creator wil receive nil
@@ -318,7 +337,7 @@ paths:
         name: message
         required: true
         schema:
-          $ref: '#/definitions/serializer.MakeNewChatRequest'
+          $ref: '#/definitions/utils.DummyMakeNewChatRequest'
       produces:
       - application/json
       responses:
@@ -332,13 +351,13 @@ paths:
       summary: make pv chat
       tags:
       - chat
-  /chat/send-pv-message:
+  /chat/send-gp-message:
     post:
       consumes:
-      - multipart/form-data
+      - application/json
       description: |-
-        send private message
-        *send data in form-data !
+        send group message
+        *send data in form-data because of file !!
         all users will receive data by websocket (same as api creator)
         so on success creator wil receive nil
       parameters:
@@ -347,7 +366,39 @@ paths:
         name: message
         required: true
         schema:
-          $ref: '#/definitions/serializer.MessageRequest'
+          $ref: '#/definitions/utils.DummyMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: We_Don't_Know_What_Happened(8)
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: send gp message
+      tags:
+      - chat
+  /chat/send-pv-message:
+    post:
+      consumes:
+      - multipart/form-data
+      description: |-
+        send private message
+        *send data in form-data because of file !!
+        all users will receive data by websocket (same as api creator)
+        so on success creator wil receive nil
+      parameters:
+      - description: Message body
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/utils.DummyMessageRequest'
       produces:
       - application/json
       responses:

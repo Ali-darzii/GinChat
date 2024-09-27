@@ -216,7 +216,7 @@ const docTemplate = `{
         },
         "/chat/make-private": {
             "post": {
-                "description": "create private chat\nsend data in form-data\nyou need to send 1 message too to create private chat\nyou will receive message in ws !\nso on success creator wil receive nil",
+                "description": "create private chat\n*send data in form-data because of file !!\nyou need to send 1 message too to create private chat\nyou will receive message in ws !\nso on success creator wil receive nil",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -234,7 +234,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/serializer.MakeNewChatRequest"
+                            "$ref": "#/definitions/utils.DummyMakeNewChatRequest"
                         }
                     }
                 ],
@@ -251,9 +251,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/send-gp-message": {
+            "post": {
+                "description": "send group message\n*send data in form-data because of file !!\nall users will receive data by websocket (same as api creator)\nso on success creator wil receive nil",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "send gp message",
+                "parameters": [
+                    {
+                        "description": "Message body",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/utils.DummyMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Token_Expired_Or_Invalid(2) | Object_Not_Found(6) | Bad_Format(5)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "We_Don't_Know_What_Happened(8)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/send-pv-message": {
             "post": {
-                "description": "send private message\n*send data in form-data !\nall users will receive data by websocket (same as api creator)\nso on success creator wil receive nil",
+                "description": "send private message\n*send data in form-data because of file !!\nall users will receive data by websocket (same as api creator)\nso on success creator wil receive nil",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -271,7 +314,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/serializer.MessageRequest"
+                            "$ref": "#/definitions/utils.DummyMessageRequest"
                         }
                     }
                 ],
@@ -429,12 +472,6 @@ const docTemplate = `{
                 }
             }
         },
-        "serializer.MakeNewChatRequest": {
-            "type": "object"
-        },
-        "serializer.MessageRequest": {
-            "type": "object"
-        },
         "serializer.ProfileAPI": {
             "type": "object",
             "properties": {
@@ -571,6 +608,41 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                }
+            }
+        },
+        "utils.DummyMakeNewChatRequest": {
+            "type": "object",
+            "required": [
+                "recipient_id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "file": {
+                    "type": "string"
+                },
+                "recipient_id": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "utils.DummyMessageRequest": {
+            "type": "object",
+            "required": [
+                "room_id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "file": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
                 }
             }
         },
