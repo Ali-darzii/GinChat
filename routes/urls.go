@@ -64,9 +64,6 @@ func Urls() *gin.Engine {
 			if err := v.RegisterValidation("username_validator", validators.UsernameValidate); err != nil {
 				panic("validator issue in URLS")
 			}
-			if err := v.RegisterValidation("image_validator", validators.ImageValidate); err != nil {
-				panic("validator issue in URLS")
-			}
 		}
 
 	}

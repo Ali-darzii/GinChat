@@ -2,8 +2,6 @@ package validators
 
 import (
 	"github.com/go-playground/validator/v10"
-	"mime/multipart"
-	"path/filepath"
 	"strings"
 	"unicode"
 )
@@ -46,29 +44,6 @@ func NameValidate(fl validator.FieldLevel) bool {
 	name := fl.Field().String()
 	if name != "" {
 		return len(name) >= 3
-	}
-	return true
-}
-func ImageValidate(fl validator.FieldLevel) bool {
-	Image, ok := fl.Field().Interface().(multipart.FileHeader)
-	if !ok {
-		return false
-	}
-	// format Check
-	ext := filepath.Ext(Image.Filename)
-	var ImageFormats = []string{".png", ".jpg", ".jpeg", ".webp"}
-	var formatCheck bool
-	for _, item := range ImageFormats {
-		if ext == item {
-			formatCheck = true
-		}
-	}
-	if !formatCheck {
-		return false
-	}
-	// Size > 6mb
-	if Image.Size > 6000 {
-		return false
 	}
 	return true
 }
