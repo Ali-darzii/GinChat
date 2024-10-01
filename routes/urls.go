@@ -68,8 +68,6 @@ func Urls() *gin.Engine {
 
 	}
 	go websocketHandler.Manager.Start()
-	//todo:need test
-	// Serve Swagger documentation
 	apiV1 := router.Group("api/v1")
 	{
 		//Authentication API

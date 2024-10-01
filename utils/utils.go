@@ -45,39 +45,37 @@ func GetExpiryTime() time.Time {
 func SmsTokenGenerate() int {
 	return rand.IntN(8999) + 1000
 }
-func UserLoggedIn(request *gin.Context, user entity.User) error {
+
+// it's data analyse no need for error handling
+func UserLoggedIn(request *gin.Context, user entity.User) {
 	var postDb *gorm.DB = db.ConnectPostgres()
 	var userLogins entity.UserLogins
 	if res := postDb.Where("user_id = ?", user.ID).Take(&userLogins); res.Error != nil {
-		return res.Error
-	}
-	userLogins.NoLogins += 1
-	if res := postDb.Save(&userLogins); res.Error != nil {
-		return res.Error
-	}
+	} else {
+		userLogins.NoLogins += 1
+		if res = postDb.Save(&userLogins); res.Error != nil {
+		}
+		var userIP entity.UserIP
+		userIP.UserLoginsID = userLogins.ID
+		userIP.IP = GetClientIP(request)
+		if res = postDb.Save(&userIP); res.Error != nil {
+		}
 
-	var userIP entity.UserIP
-	userIP.UserLoginsID = userLogins.ID
-	userIP.IP = GetClientIP(request)
-	if res := postDb.Save(&userIP); res.Error != nil {
-		return res.Error
+		userAgent := request.GetHeader("User-Agent")
+		ua := user_agent.New(userAgent)
+		var userDevice entity.UserDevice
+		userDevice.UserLoginsID = userLogins.ID
+		userDevice.Os = ua.OS()
+		userDevice.Browser, _ = ua.Browser()
+		userDevice.DeviceName = ua.Model()
+		userDevice.IsPhone = ua.Mobile()
+
+		if res = postDb.Save(&userDevice); res.Error != nil {
+		}
+
 	}
-
-	userAgent := request.GetHeader("User-Agent")
-	ua := user_agent.New(userAgent)
-	var userDevice entity.UserDevice
-	userDevice.UserLoginsID = userLogins.ID
-	userDevice.Os = ua.OS()
-	userDevice.Browser, _ = ua.Browser()
-	userDevice.DeviceName = ua.Model()
-	userDevice.IsPhone = ua.Mobile()
-
-	if res := postDb.Save(&userDevice); res.Error != nil {
-		return res.Error
-	}
-
-	return nil
 }
+
 func ImageValidate(image *multipart.FileHeader) bool {
 	// format Check
 	ext := filepath.Ext(image.Filename)
@@ -97,7 +95,6 @@ func ImageValidate(image *multipart.FileHeader) bool {
 	}
 	return true
 }
-
 func FilePathController(imagePath string, imageName string) string {
 	if _, err := os.Open(imagePath + imageName); err == nil {
 		index := strings.Index(imageName, ".")

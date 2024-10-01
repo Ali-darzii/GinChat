@@ -26,7 +26,7 @@ func NewAuthService(repo repository.AuthRepository) AuthService {
 	}
 }
 
-// todo: we need celery for this
+// todo: we need goroutines for this
 func (a authService) Register(registerRequest serializer.RegisterRequest) (bool, error) {
 	user, err := a.authRepository.FindByPhone(registerRequest.PhoneNo)
 	var isSignup = true

@@ -94,6 +94,8 @@ func (a authAPI) Login(request *gin.Context) {
 		}
 	}
 
+	go utils.UserLoggedIn(request, user)
+
 	// todo: test issue
 	request.SetCookie(
 		"loginAttempt",
@@ -103,16 +105,14 @@ func (a authAPI) Login(request *gin.Context) {
 		false,
 		true,
 	)
-	if err := utils.UserLoggedIn(request, user); err != nil {
-		request.JSON(http.StatusBadRequest, err.Error())
-		return
-	}
+
 	jwt := JWT.Jwt{}
 	token, err := jwt.CreateToken(user)
 	if err != nil {
 		request.JSON(http.StatusBadRequest, utils.SomethingWentWrong)
 		return
 	}
+
 	request.JSON(http.StatusOK, token)
 	return
 }
