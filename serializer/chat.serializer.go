@@ -87,13 +87,16 @@ type MessageRequest struct {
 }
 
 // either we should have content or File(image) if there is voice u can't send voice
-func (m *MessageRequest) PvMessageValidate() bool {
-	ext := filepath.Ext(m.File.Filename)
-	if ext == "mp3" && m.Content != "" {
-		return false
-	}
+func (m MessageRequest) PvMessageValidate() bool {
 	if m.Content == "" && m.File == nil {
 		return false
 	}
+	if m.File != nil {
+		ext := filepath.Ext(m.File.Filename)
+		if ext == "mp3" && m.Content != "" {
+			return false
+		}
+	}
+
 	return true
 }
