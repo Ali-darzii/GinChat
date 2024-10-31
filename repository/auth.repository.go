@@ -2,16 +2,23 @@ package repository
 
 import (
 	"GinChat/entity"
+	"GinChat/utils"
+	"context"
 	"errors"
+	"fmt"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
+	"strconv"
 )
 
+var ctx = context.Background()
+
 type AuthRepository interface {
+	CheckAndMakeOTP(string) error
+	NewUserAndMakeOTP(user entity.User) error
+	CheckOTP(string, string) error
 	UserSave(entity.User) error
-	PhoneSave(entity.Phone) error
 	FindByPhone(string) (entity.User, error)
-	NewUserSave(user entity.User) error
 }
 
 type authRepository struct {
@@ -25,16 +32,49 @@ func NewAuthRepository(postgresConnection *gorm.DB, redisConnection *redis.Clien
 		redisConn:    redisConnection,
 	}
 }
-func (a authRepository) NewUserSave(user entity.User) error {
-	if res := a.postgresConn.Save(&user); res.Error != nil {
-		return res.Error
-	}
-	user.UserLogins.UserID = user.ID
-	if res := a.postgresConn.Save(&user); res.Error != nil {
-		return res.Error
-	}
-	a.redisConn.Del(ctx, "userCount")
 
+func (a authRepository) CheckAndMakeOTP(phoneNo string) error {
+	lastCode, err := a.redisConn.Get(ctx, fmt.Sprintf("otp_"+phoneNo)).Result()
+	if err != nil {
+		return errors.New("something_went_wrong")
+	}
+	if lastCode != "" {
+		return errors.New("too_many_request")
+	}
+	expTime := utils.GetExpiryTime()
+	token := strconv.Itoa(utils.SmsTokenGenerate())
+	a.redisConn.Set(ctx, "otp_"+phoneNo, token, expTime)
+	go utils.SendSMS(token, phoneNo)
+	fmt.Println(token)
+	return nil
+}
+func (a authRepository) NewUserAndMakeOTP(user entity.User) error {
+	if res := a.postgresConn.Save(&user); res.Error != nil {
+		return res.Error
+	}
+	go func() {
+		user.UserLogins.UserID = user.ID
+		a.postgresConn.Save(&user)
+		a.redisConn.Del(ctx, "userCount")
+	}()
+	token := strconv.Itoa(utils.SmsTokenGenerate())
+	expTime := utils.GetExpiryTime()
+	a.redisConn.Set(ctx, "otp_"+user.PhoneNo, token, expTime)
+	go utils.SendSMS(token, user.PhoneNo)
+	fmt.Println(token)
+	return nil
+}
+func (a authRepository) CheckOTP(PhoneNo string, token string) error {
+	lastCode, err := a.redisConn.Get(ctx, "otp_"+PhoneNo).Result()
+	if err != nil {
+		return err
+	}
+	if lastCode == "" {
+		return errors.New("expired_time")
+	}
+	if lastCode != token {
+		return errors.New("invalid_token")
+	}
 	return nil
 }
 func (a authRepository) UserSave(user entity.User) error {
@@ -45,22 +85,10 @@ func (a authRepository) UserSave(user entity.User) error {
 
 	return nil
 }
-func (a authRepository) PhoneSave(phone entity.Phone) error {
-	if res := a.postgresConn.Save(&phone); res.Error != nil {
-		return res.Error
-	}
-
-	return nil
-}
 func (a authRepository) FindByPhone(phoneNo string) (entity.User, error) {
-	var phone entity.Phone
-	if res := a.postgresConn.Where("phone_no = ?", phoneNo).Take(&phone); res.Error != nil {
-		return entity.User{}, errors.New("not_found")
-	}
 	var user entity.User
-	if res := a.postgresConn.Where("id = ?", phone.UserID).Take(&user); res.Error != nil {
-		return entity.User{}, res.Error
+	if res := a.postgresConn.Where("phone_no = ?", phoneNo).Take(&user); res.Error != nil {
+		return user, errors.New("not_found")
 	}
-	user.Phone = phone
 	return user, nil
 }

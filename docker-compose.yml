@@ -15,19 +15,19 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: GinChat-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: youremail@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: your_password
-      PGADMIN_LISTEN_PORT: 8000
-    ports:
-      - "8000:8000"
-    depends_on:
-      - postgres
-    networks:
-      - live
+    pgadmin:
+      image: dpage/pgadmin4:latest
+      container_name: GinChat-pgadmin
+      environment:
+        PGADMIN_DEFAULT_EMAIL: youremail@gmail.com
+        PGADMIN_DEFAULT_PASSWORD: your_password
+        PGADMIN_LISTEN_PORT: 8000
+      ports:
+        - "8000:8000"
+      depends_on:
+        - postgres
+      networks:
+        - live
 
   redis:
     image: redis:7.0.11-alpine

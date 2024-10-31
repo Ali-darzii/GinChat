@@ -64,14 +64,14 @@ func (c chatAPI) ChatWs(request *gin.Context) {
 		return
 	}
 
-	var phone entity.Phone
-	if res := postDb.Where("phone_no = ?", phoneNo).Take(&phone); res.Error != nil {
+	var user entity.User
+	if res := postDb.Where("phone_no = ?", phoneNo).Take(&user); res.Error != nil {
 		request.JSON(http.StatusInternalServerError, utils.SomethingWentWrong)
 		return
 	}
 
 	client := &websocketHandler.Client{
-		Id:     phone.UserID,
+		Id:     user.ID,
 		Socket: webSocket,
 		Send:   make(chan []byte),
 	}

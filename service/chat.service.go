@@ -28,15 +28,15 @@ func NewChatService(repository repository.ChatRepository) ChatService {
 }
 
 func (c chatService) GetAllRooms(phoneNo string) ([]serializer.Room, error) {
-	userId, _ := c.chatRepository.FindByPhone(phoneNo)
-	usersInSameRoom, err := c.chatRepository.GetAllRooms(userId)
+	user, _ := c.chatRepository.FindByPhone(phoneNo)
+	usersInSameRoom, err := c.chatRepository.GetAllRooms(user.ID)
 	if err != nil {
 		return []serializer.Room{}, err
 	}
 	return usersInSameRoom, nil
 }
 func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest, phoneNo string) (serializer.Message, error) {
-	userId, err := c.chatRepository.FindByPhone(phoneNo)
+	user, err := c.chatRepository.FindByPhone(phoneNo)
 	var message serializer.Message
 	if err != nil {
 		return message, err
@@ -55,12 +55,12 @@ func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest
 
 	privateRoom := entity.PrivateRoom{
 		Users: []entity.User{
-			{ID: userId},
+			{ID: user.ID},
 			{ID: makeNewChatRequest.RecipientID},
 		},
 	}
 	privateChat := entity.PrivateMessageRoom{
-		Sender: userId,
+		Sender: user.ID,
 		Body:   &makeNewChatRequest.Content,
 		File:   &imagePath,
 	}
@@ -72,14 +72,14 @@ func (c chatService) MakePvChat(makeNewChatRequest serializer.MakeNewChatRequest
 	message.PvMessage.Type = "new_pv_message"
 	message.PvMessage.File = imagePath
 	message.PvMessage.RoomID = privateChat.PrivateID
-	message.PvMessage.Sender = userId
+	message.PvMessage.Sender = user.ID
 	message.PvMessage.Content = *privateChat.Body
-	message.Recipients = []uint{userId, makeNewChatRequest.RecipientID}
+	message.Recipients = []uint{user.ID, makeNewChatRequest.RecipientID}
 
 	return message, nil
 }
 func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChatRequest, phoneNo string) (serializer.Message, error) {
-	userId, err := c.chatRepository.FindByPhone(phoneNo)
+	user, err := c.chatRepository.FindByPhone(phoneNo)
 	var message serializer.Message
 	if err != nil {
 		return message, err
@@ -95,8 +95,8 @@ func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChat
 	groupRoom := entity.GroupRoom{
 		Avatar: &imagePath,
 		Name:   makeGroupChatRequest.Name,
-		Users:  []entity.User{{ID: userId}},
-		Admins: []entity.User{{ID: userId}},
+		Users:  []entity.User{{ID: user.ID}},
+		Admins: []entity.User{{ID: user.ID}},
 	}
 
 	for _, id := range makeGroupChatRequest.Recipients {
@@ -109,16 +109,16 @@ func (c chatService) MakeGroupChat(makeGroupChatRequest serializer.MakeGroupChat
 	}
 
 	message.Avatar = imagePath
-	message.Recipients = append(makeGroupChatRequest.Recipients, userId)
+	message.Recipients = append(makeGroupChatRequest.Recipients, user.ID)
 	message.PvMessage.Type = "new_gp_message"
 	message.PvMessage.RoomID = groupRoom.ID
-	message.PvMessage.Sender = userId
+	message.PvMessage.Sender = user.ID
 
 	return message, nil
 
 }
 func (c chatService) SendPvMessage(pvMessage serializer.MessageRequest, phoneNo string) (serializer.Message, error) {
-	userId, err := c.chatRepository.FindByPhone(phoneNo)
+	user, err := c.chatRepository.FindByPhone(phoneNo)
 	var message serializer.Message
 	if err != nil {
 		return message, err
@@ -139,7 +139,7 @@ func (c chatService) SendPvMessage(pvMessage serializer.MessageRequest, phoneNo 
 
 	privateMessage := entity.PrivateMessageRoom{
 		PrivateID: pvMessage.RoomID,
-		Sender:    userId,
+		Sender:    user.ID,
 		Body:      &pvMessage.Content,
 		File:      &imagePath,
 	}
@@ -149,7 +149,7 @@ func (c chatService) SendPvMessage(pvMessage serializer.MessageRequest, phoneNo 
 	}
 	var sameRoom bool
 	for _, item := range recipientsId {
-		if userId == item {
+		if user.ID == item {
 			sameRoom = true
 		}
 	}
@@ -160,7 +160,7 @@ func (c chatService) SendPvMessage(pvMessage serializer.MessageRequest, phoneNo 
 	message.PvMessage.Type = "pv_message"
 	message.PvMessage.File = imagePath
 	message.PvMessage.RoomID = pvMessage.RoomID
-	message.PvMessage.Sender = userId
+	message.PvMessage.Sender = user.ID
 	message.PvMessage.Content = pvMessage.Content
 	message.Recipients = recipientsId
 
@@ -168,7 +168,7 @@ func (c chatService) SendPvMessage(pvMessage serializer.MessageRequest, phoneNo 
 
 }
 func (c chatService) SendGpMessage(gpMessage serializer.MessageRequest, phoneNo string) (serializer.Message, error) {
-	userId, err := c.chatRepository.FindByPhone(phoneNo)
+	user, err := c.chatRepository.FindByPhone(phoneNo)
 	var message serializer.Message
 	if err != nil {
 		return message, err
@@ -188,7 +188,7 @@ func (c chatService) SendGpMessage(gpMessage serializer.MessageRequest, phoneNo 
 	}
 	groupMessage := entity.GroupMessageRoom{
 		GroupID: gpMessage.RoomID,
-		Sender:  userId,
+		Sender:  user.ID,
 		Body:    &gpMessage.Content,
 		File:    &imagePath,
 	}
@@ -198,7 +198,7 @@ func (c chatService) SendGpMessage(gpMessage serializer.MessageRequest, phoneNo 
 	}
 	var sameRoom bool
 	for _, item := range recipientsId {
-		if userId == item {
+		if user.ID == item {
 			sameRoom = true
 		}
 	}
@@ -208,7 +208,7 @@ func (c chatService) SendGpMessage(gpMessage serializer.MessageRequest, phoneNo 
 	message.PvMessage.Type = "gp_message"
 	message.PvMessage.File = imagePath
 	message.PvMessage.RoomID = gpMessage.RoomID
-	message.PvMessage.Sender = userId
+	message.PvMessage.Sender = user.ID
 	message.PvMessage.Content = gpMessage.Content
 	message.Recipients = recipientsId
 	return message, nil

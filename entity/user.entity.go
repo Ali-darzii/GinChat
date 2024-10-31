@@ -11,20 +11,20 @@ type User struct {
 	Avatar   *string `gorm:"type:varchar(100);NULL" json:"avatar_url"`
 	IsActive bool    `gorm:"type:bool;default:true" json:"is_active"`
 	IsAdmin  bool    `gorm:"type:bool;default:false" json:"is_admin"`
+	PhoneNo  string  `gorm:"type:varchar(11);min=11;unique" json:"phone_no"`
 
-	Phone              Phone              `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"phone"`
 	UserLogins         UserLogins         `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"user_logins"`
 	PrivateMessageRoom PrivateMessageRoom `gorm:"foreignKey:Sender;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"private_message"`
 	GroupMessageRoom   GroupMessageRoom   `gorm:"foreignKey:Sender;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"group_message"`
 }
 
-type Phone struct {
-	ID      uint   `gorm:"primary_key:auto_increment" json:"id"`
-	UserID  uint   `gorm:"uniqueIndex;NOT NULL" json:"user_id"`
-	PhoneNo string `gorm:"type:varchar(11);min=11;unique;NOT NULL" json:"phone_no"`
-	Token   *int   `gorm:"type:int;min=4,max=4" json:"token"`
-	ExpTime *time.Time
-}
+//type Phone struct {
+//	ID      uint   `gorm:"primary_key:auto_increment" json:"id"`
+//	UserID  uint   `gorm:"uniqueIndex;NOT NULL" json:"user_id"`
+//	PhoneNo string `gorm:"type:varchar(11);min=11;unique;NOT NULL" json:"phone_no"`
+//	Token   *int   `gorm:"type:int;min=4,max=4" json:"token"`
+//	ExpTime *time.Time
+//}
 
 // statistics
 

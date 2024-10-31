@@ -31,7 +31,6 @@ func ConnectPostgres() *gorm.DB {
 	err = db.AutoMigrate(
 		//auth
 		&entity.User{},
-		&entity.Phone{},
 		&entity.UserLogins{},
 		&entity.UserDevice{},
 		&entity.UserIP{},

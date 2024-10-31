@@ -37,10 +37,9 @@ func GetClientIP(request *gin.Context) string {
 	}
 	return ip
 }
-func GetExpiryTime() time.Time {
+func GetExpiryTime() time.Duration {
 	const expTime int8 = 60
-	return time.Now().Add(time.Second * time.Duration(expTime))
-
+	return time.Duration(expTime)
 }
 func SmsTokenGenerate() int {
 	return rand.IntN(8999) + 1000
@@ -105,4 +104,8 @@ func FilePathController(imagePath string, imageName string) string {
 		imagePath += imageName
 	}
 	return imagePath
+}
+
+func SendSMS(token string, phoneNo string) {
+
 }

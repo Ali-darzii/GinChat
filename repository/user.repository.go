@@ -29,6 +29,7 @@ func NewUserRepository(postgres *gorm.DB, redis *redis.Client) UserRepository {
 		redisConn:    redis,
 	}
 }
+
 func (u userRepository) GetAllUsers(paginationRequest serializer.PaginationRequest, userId uint) ([]serializer.UserInRoom, int64, error) {
 	var allUsers []serializer.UserInRoom
 	u.postgresConn.

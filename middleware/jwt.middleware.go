@@ -23,7 +23,7 @@ func AuthorizationJWT(jwtService JWT.JwtService) gin.HandlerFunc {
 			request.AbortWithStatusJSON(http.StatusBadRequest, utils.TokenIsExpiredOrInvalid)
 			return
 		}
-		request.Set("phoneNo", user.Phone.PhoneNo)
+		request.Set("phoneNo", user.PhoneNo)
 		return
 	}
 }

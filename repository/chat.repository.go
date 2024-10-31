@@ -3,17 +3,14 @@ package repository
 import (
 	"GinChat/entity"
 	"GinChat/serializer"
-	"context"
 	"errors"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 	"sort"
 )
 
-var ctx = context.Background()
-
 type ChatRepository interface {
-	FindByPhone(string) (uint, error)
+	FindByPhone(string) (entity.User, error)
 	GetAllRooms(uint) ([]serializer.Room, error)
 	MakePvChat(entity.PrivateRoom, entity.PrivateMessageRoom) (entity.PrivateMessageRoom, error)
 	MakeGroupChat(entity.GroupRoom) (entity.GroupRoom, error)
@@ -32,12 +29,12 @@ func NewChatRepository(postgres *gorm.DB, redisConnection *redis.Client) ChatRep
 	}
 }
 
-func (c chatRepository) FindByPhone(phoneNo string) (uint, error) {
-	var phone entity.Phone
-	if res := c.postgresConn.Where("phone_no = ?", phoneNo).Take(&phone); res.Error != nil {
-		return 0, errors.New("not_found")
+func (c chatRepository) FindByPhone(phoneNo string) (entity.User, error) {
+	var user entity.User
+	if res := c.postgresConn.Where("phone_no = ?", phoneNo).Take(&user); res.Error != nil {
+		return user, errors.New("not_found")
 	}
-	return phone.UserID, nil
+	return user, nil
 }
 func (c chatRepository) GetAllRooms(userId uint) ([]serializer.Room, error) {
 	var allRooms []serializer.Room
@@ -141,7 +138,7 @@ func (c chatRepository) MakeGroupChat(groupRoom entity.GroupRoom) (entity.GroupR
 	if res := c.postgresConn.Save(&groupRoom); res.Error != nil {
 		return entity.GroupRoom{}, res.Error
 	}
-	
+
 	return groupRoom, nil
 
 }

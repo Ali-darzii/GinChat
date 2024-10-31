@@ -11,6 +11,6 @@ type RegisterRequest struct {
 
 type LoginRequest struct {
 	PhoneNo string `binding:"required,phone_validator" json:"phone_no"`
-	Token   int    `binding:"required" json:"token"`
+	Token   string `binding:"required" json:"token"`
 	Name    string `binding:"name_validator" json:"name"`
 }

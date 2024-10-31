@@ -52,10 +52,10 @@ func (a authAPI) Register(request *gin.Context) {
 		return
 	}
 	if isSignup {
-		request.JSON(http.StatusCreated, utils.RegisterResponse{Detail: "sent", IsSignup: isSignup})
+		request.JSON(http.StatusCreated, utils.RegisterResponse{Detail: "Sent.", IsSignup: isSignup})
 		return
 	}
-	request.JSON(http.StatusOK, utils.RegisterResponse{Detail: "sent", IsSignup: isSignup})
+	request.JSON(http.StatusOK, utils.RegisterResponse{Detail: "Sent.", IsSignup: isSignup})
 	return
 }
 
