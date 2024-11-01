@@ -9,6 +9,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 	"strconv"
+	"strings"
 )
 
 var ctx = context.Background()
@@ -42,6 +43,12 @@ func (a authRepository) CheckAndMakeOTP(phoneNo string) error {
 		return errors.New("too_many_request")
 	}
 	expTime := utils.GetExpiryTime()
+	//handle user test
+	if strings.HasPrefix(phoneNo, "0950") {
+		token := "5555"
+		a.redisConn.Set(ctx, "otp_"+phoneNo, token, expTime)
+		return nil
+	}
 	token := strconv.Itoa(utils.SmsTokenGenerate())
 	a.redisConn.Set(ctx, "otp_"+phoneNo, token, expTime)
 	go utils.SendSMS(token, phoneNo)
@@ -57,8 +64,13 @@ func (a authRepository) NewUserAndMakeOTP(user entity.User) error {
 		a.postgresConn.Save(&user)
 		a.redisConn.Del(ctx, "userCount")
 	}()
-	token := strconv.Itoa(utils.SmsTokenGenerate())
 	expTime := utils.GetExpiryTime()
+	if strings.HasPrefix(user.PhoneNo, "0950") {
+		token := "5555"
+		a.redisConn.Set(ctx, "otp_"+user.PhoneNo, token, expTime)
+		return nil
+	}
+	token := strconv.Itoa(utils.SmsTokenGenerate())
 	a.redisConn.Set(ctx, "otp_"+user.PhoneNo, token, expTime)
 	go utils.SendSMS(token, user.PhoneNo)
 	fmt.Println(token)

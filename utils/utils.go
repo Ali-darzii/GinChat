@@ -107,5 +107,5 @@ func FilePathController(imagePath string, imageName string) string {
 }
 
 func SendSMS(token string, phoneNo string) {
-
+	
 }
