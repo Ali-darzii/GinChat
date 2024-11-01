@@ -27,11 +27,11 @@ func NewUserService(repo repository.UserRepository) UserService {
 }
 func (u userService) GetAllUsers(paginationRequest serializer.PaginationRequest, phoneNo string) (serializer.APIUserPagination, error) {
 	var apiUserPagination serializer.APIUserPagination
-	userId, err := u.userRepository.FindByPhone(phoneNo)
+	user, err := u.userRepository.FindByPhone(phoneNo)
 	if err != nil {
 		return apiUserPagination, err
 	}
-	users, userCount, err := u.userRepository.GetAllUsers(paginationRequest, userId)
+	users, userCount, err := u.userRepository.GetAllUsers(paginationRequest, user.ID)
 	if err != nil {
 		return apiUserPagination, err
 	}

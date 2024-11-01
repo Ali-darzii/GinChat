@@ -12,7 +12,7 @@ import (
 )
 
 type UserRepository interface {
-	FindByPhone(string) (uint, error)
+	FindByPhone(string) (entity.User, error)
 	GetAllUsers(serializer.PaginationRequest, uint) ([]serializer.UserInRoom, int64, error)
 	ProfileUpdate(entity.User) (serializer.UpdatedProfile, error)
 	GetUserProfile(entity.User) (serializer.ProfileAPI, error)
@@ -51,22 +51,22 @@ func (u userRepository) GetAllUsers(paginationRequest serializer.PaginationReque
 	var userCount int64
 	if redisUserCount == "" {
 		u.postgresConn.Model(&entity.User{}).Count(&userCount)
-		u.redisConn.Set(ctx, "userCount", userCount, time.Hour)
+		go func() {
+			u.redisConn.Set(ctx, "userCount", userCount, time.Hour)
+		}()
 	} else {
 		userCount, _ = strconv.ParseInt(redisUserCount, 10, 64)
 	}
 	// exclude self user
 	return allUsers, userCount - 1, nil
 }
-
-func (u userRepository) FindByPhone(phoneNo string) (uint, error) {
-	var phone entity.Phone
-	if res := u.postgresConn.Where("phone_no = ?", phoneNo).Take(&phone); res.Error != nil {
-		return 0, errors.New("not_found")
+func (u userRepository) FindByPhone(phoneNo string) (entity.User, error) {
+	var user entity.User
+	if res := u.postgresConn.Where("phone_no = ?", phoneNo).Take(&user); res.Error != nil {
+		return user, errors.New("not_found")
 	}
-	return phone.UserID, nil
+	return user, nil
 }
-
 func (u userRepository) ProfileUpdate(user entity.User) (serializer.UpdatedProfile, error) {
 	//unique username check completely
 	var userUsernameCheck entity.User
@@ -88,7 +88,6 @@ func (u userRepository) ProfileUpdate(user entity.User) (serializer.UpdatedProfi
 	}
 	return updatedProfile, nil
 }
-
 func (u userRepository) GetUserProfile(user entity.User) (serializer.ProfileAPI, error) {
 	var userProfile serializer.ProfileAPI
 	if res := u.postgresConn.First(&user).Find(&userProfile); res.Error != nil {
